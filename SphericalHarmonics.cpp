@@ -2,12 +2,12 @@
 //
 
 #include <iostream>
+#include <iomanip>
 #include "SphericalHarmonics.h"
 #include "Legendre.h"
 #include "SphericalCalc.h"
 
 
-//-----------------------------------------Preliminary class definitions and consutructions, not necessary to read.
 
 
 
@@ -16,16 +16,19 @@
 
 
 
-//Main Body of code, read to understand algorithm.
 
-
-
+//Encapsulation of the Scalar Harmonic Function Y.
+//How to use:
+//1) declare and initialize a variable Y y(m , n , kappa);
+//2) call the function as y(x); where x is a spherical coordinate point.
 class Y : public SurfaceScalarFunction
 {
 private:
     int m;
     int n;
+    //kappa value for computing gradient. See SurfaceGrad for more.
     double kappa;
+    Legendre poly;
 
 public:
     Y(int a, int b , double k)
@@ -33,6 +36,7 @@ public:
         m = a;
         n = b;
         kappa = k;
+        
 
     }
 
@@ -40,7 +44,7 @@ public:
     //Implements the function Y 
     std::complex<double> operator()(SurfaceCoord s)
     {
-        Legendre poly;
+        
         poly.populate(cos(s.theta.real()) , m, n);
         const std::complex<double> I(0.0, 1.0);
         double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * MATHPI * (double)factorial(n + m)));
@@ -56,6 +60,7 @@ public:
     }
 };
 
+//Encapsulation of gradient of Scalar Harmonic function. Not used.
 class G : public SphericalVectorField
 {
 private:
@@ -82,6 +87,8 @@ public:
 
 };
 
+
+//Spherical Harmonic Basis function encapsulations.
 class V : public SphericalVectorField
 {
     int m;
@@ -104,8 +111,8 @@ public:
         PolarCoord temp;
         Y y(m, n , k);
 
-        temp.rho = -((double)n+1) * y(x.s);
-        temp.s = surfaceGrad(&y, x.s, h , k);
+        temp = -((double)n+1) * y(x.s) * PolarCoord(1, x.s);
+        temp = temp + surfaceGrad(&y, x.s, h , k);
 
         return temp;
 
@@ -118,7 +125,6 @@ public:
     }
 
 };
-
 class W : public SphericalVectorField
 {
     int m;
@@ -141,8 +147,8 @@ public:
         PolarCoord temp;
         Y y(m, n , k);
 
-        temp.rho = (double)n * y(x.s);
-        temp.s = surfaceGrad(&y, x.s, h , k);
+        temp = (double)n * y(x.s) * PolarCoord(1 , x.s);
+        temp = surfaceGrad(&y, x.s, h, k) + temp;
 
         return temp;
 
@@ -153,7 +159,6 @@ public:
         n = b;
     }
 };
-
 class X : public SphericalVectorField
 {
     int m;
@@ -176,11 +181,11 @@ public:
     PolarCoord operator()(PolarCoord x)
     {
         PolarCoord temp;
-        PolarCoord er = PolarCoord(1.0, SurfaceCoord(0.0, 0.0));
+        PolarCoord er = PolarCoord(1.0, x.s);
         Y y(m, n , k);
 
-        temp.rho = 1;
-        temp.s = surfaceGrad(&y, x.s, h , k);
+        
+        temp = surfaceGrad(&y, x.s, h , k);
 
         return RectToSphere(cross(SphereToRect(x), SphereToRect(temp)));
 
@@ -194,6 +199,7 @@ public:
 
 };
 
+//Encapsulation of a single term in the expansion of a function.
 class SphericalHarmonic : public SphericalVectorField
 {
 private:
@@ -221,13 +227,26 @@ public:
 
 };
 
-
+//The function to approximate.
 class rho : public SphericalVectorField
 {
+
+private:
+
+    double step;
+    double k;
+public:
+    rho(){}
+    rho(double steps, double kappa) 
+    {
+        step = steps;
+        k = kappa;
+    }
+
     PolarCoord operator()(PolarCoord x)
     {
         //identity function
-        return x;
+        //return x;
 
         //scale function.
         //return 2 * x;
@@ -235,24 +254,41 @@ class rho : public SphericalVectorField
 
         //rotation of x by pi/4.
         //return PolarCoord(x.rho , x.s + SurfaceCoord(MATHPI / 4.0 , 0));
+
+        V z(2, 2, step, k);
+
+        return z(x);
     }
 };
 
 int main()
 {
-    rho r;
+    std::setprecision(12);
     
+    
+    //numerical parameters.
+    
+    //series truncation
     const int N = 5;
+    
+    //step size for gradient.
     const double GRADSTEP = 10e-6;
+
+    
+    //kappa for gradient computation.
     const double KAPPA = 10e-6;
+
+    //number of panel points per dimension in integrals.
     const int NUMGRIDS = 100;
 
-    std::complex<double> sum;
-
+    //Basis functions. one for each term in the series.
     static V v[2*N + 1][N];
     static W w[2*N + 1][N];
     static X x[2*N + 1][N];
+
+    rho r(GRADSTEP, KAPPA);
    
+    //set up the basis functions. an index of [m+N][n] corresponds to negative values of m.
     for(int m = 0; m < N; m++)
         for (int n = 0; n < N; n++)
         {
@@ -266,8 +302,8 @@ int main()
 
     //calculate the inner products;
 
+    //for V
     static std::complex<double> rhohatV[2 * N + 1][N];
-    int count = 0;
     std::cout << "Computing inner product coefficiencts for V... " << std::endl;
     for (int n = 0; n < N; n++)
         for (int m = 0; m <= n; m++)
@@ -283,6 +319,7 @@ int main()
         }
     std::cout << "Done!" << std::endl;
 
+    //for W.
     static std::complex<double> rhohatW[2 * N + 1][N];
     std::cout << "Computing inner product coefficiencts for W... " << std::endl;
     for (int n = 0; n < N; n++)
@@ -298,6 +335,7 @@ int main()
         }
     std::cout << "Done!" << std::endl;
 
+    //and for X.
     static std::complex<double> rhohatX[2 * N + 1][N];
     std::cout << "Computing inner product coefficiencts for X... " << std::endl;
     for (int n = 0; n < N; n++)
@@ -316,12 +354,16 @@ int main()
     std::cout << "Gathering summation... ";
   
 
+    //declare terms in the series.
     SphericalHarmonic Vterm[2 * N + 1][N];
     SphericalHarmonic Wterm[2 * N + 1][N];
     SphericalHarmonic Xterm[2 * N + 1][N];
 
+
+    //declare the approximation.
     VectorFieldSum rhoapprox;
 
+    //construct the summation. Note we must compute the L2 norm of the basis functions to do so, so this takes a few seconds..
         for (int n = 0; n < N; n++)
             for (int m = 0; m <= n; m++)
             {
@@ -359,6 +401,8 @@ int main()
             }
     std::cout << "Done!" << std::endl << std::endl;
 
+
+    //Compute the error in approximating rho by it's expansion in Spherical Harmonics.
     std::cout << "Error in approximation(L2): ";
     std::cout << L2Difference(&r, &rhoapprox, NUMGRIDS) << std::endl;
 

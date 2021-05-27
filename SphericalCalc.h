@@ -93,6 +93,14 @@ RectCoord operator -(RectCoord a, RectCoord b)
 {
     return RectCoord(a.x - b.x, a.y - b.y, a.z - b.z);
 }
+RectCoord operator *(std::complex<double> c, RectCoord a)
+{
+    return RectCoord(c * a.x, c * a.y, c * a.z);
+}
+RectCoord operator *(RectCoord a , std::complex<double> c)
+{
+    return RectCoord(c * a.x, c * a.y, c * a.z);
+}
 
 //dot product for rectangular coordinates.
 std::complex<double> dot(RectCoord a, RectCoord b)
@@ -133,6 +141,15 @@ RectCoord SphereToRect(PolarCoord r)
 {
     return RectCoord(r);
 }
+SurfaceCoord RectToSurface(RectCoord x)
+{
+    return RectToSphere(x).s;
+}
+RectCoord SurfaceToRect(SurfaceCoord s)
+{
+    PolarCoord temp(1, s);
+    return SphereToRect(temp);
+}
 
 //Polar coordinate arithmetic operators.
 PolarCoord operator +(PolarCoord r, PolarCoord q)
@@ -172,21 +189,35 @@ public:
 
 //Computes the numerical gradient of a Surface to Scalar function using a symmetric difference with specified stepsize.
 //kappa exists to prevent division by zero and should be set small for accuracy.
-SurfaceCoord surfaceGrad(SurfaceScalarFunction* u, SurfaceCoord s, double stepsize, double kappa)
-{
-    SurfaceCoord temp;
+PolarCoord surfaceGrad(SurfaceScalarFunction* u, SurfaceCoord s, double stepsize, double kappa)
+{ 
+    //Construct unit vectors.
+    PolarCoord ephi , etheta;
+    ephi  = RectToSphere(RectCoord(sin(s.phi),cos(s.phi) ,0));
+    etheta = RectToSphere(RectCoord(cos(s.theta) * cos(s.phi) , cos(s.theta) * sin(s.phi) , -sin(s.theta)));
+
+    //evaluate partial derivative with respect to theta.
     SurfaceCoord thetaPlus = SurfaceCoord(s.phi, s.theta + stepsize / 2);
     SurfaceCoord thetaMinus = SurfaceCoord(s.phi, s.theta - stepsize / 2);
 
-    temp.theta = (*u)(thetaPlus).real() - (*u)(thetaMinus).real();
-    temp.theta /= stepsize;
+    double dtheta = 0;
+    dtheta = (*u)(thetaPlus).real() - (*u)(thetaMinus).real();
+    dtheta /= stepsize;
 
+    //add contribution to gradient.
+    PolarCoord temp;
+    temp = temp + dtheta * etheta;
+
+    //evaulate partial derivative with respect to phi
     SurfaceCoord phiPlus = SurfaceCoord(s.phi + stepsize / 2, s.theta);
     SurfaceCoord phiMinus = SurfaceCoord(s.phi - stepsize / 2, s.theta);
 
-    temp.phi = (*u)(phiPlus).real() - (*u)(phiMinus).real();
-    temp.phi /= sin(s.theta) * stepsize + (1 + kappa) * stepsize;
+    double dphi = 0;
+    dphi += (*u)(phiPlus).real() - (*u)(phiMinus).real();
+    dphi /= sin(s.theta).real() * stepsize + (1 + kappa) * stepsize;
 
+    //add contribution to gradient and return.
+    temp = temp + dphi * etheta;
     return temp;
 }
 
