@@ -187,7 +187,7 @@ public:
         
         temp = surfaceGrad(&y, x.s, h , k);
 
-        return RectToSphere(cross(SphereToRect(x), SphereToRect(temp)));
+        return RectToSphere(cross(SphereToRect(er), SphereToRect(temp)));
 
     }
 
@@ -270,13 +270,18 @@ int main()
     
     //series truncation
     const int N = 5;
+    const int NUMPASSES = 50;
     
     //step size for gradient.
-    const double GRADSTEP = 10e-6;
+    const double GRADSTEP = 10e-10;
 
     
     //kappa for gradient computation.
-    const double KAPPA = 10e-6;
+    double KAPPA[NUMPASSES];
+    for (int i = 0; i < NUMPASSES; i++)
+    {
+        KAPPA[i] = exp(-log(10)*(double)i * 4.0 / NUMPASSES );
+    }
 
     //number of panel points per dimension in integrals.
     const int NUMGRIDS = 100;
@@ -286,102 +291,110 @@ int main()
     static W w[2*N + 1][N];
     static X x[2*N + 1][N];
 
-    rho r(GRADSTEP, KAPPA);
-   
-    //set up the basis functions. an index of [m+N][n] corresponds to negative values of m.
-    for(int m = 0; m < N; m++)
-        for (int n = 0; n < N; n++)
-        {
-            v[m][n] = V(m, n, GRADSTEP , KAPPA);
-            v[m + N][n] = V(-m, n, GRADSTEP , KAPPA);
-            w[m][n] = W(m, n, GRADSTEP, KAPPA);
-            w[m + N][n] = W(-m, n, GRADSTEP, KAPPA);
-            x[m][n] = X(m, n, GRADSTEP, KAPPA);
-            x[m + N][n] = X(-m, n, GRADSTEP , KAPPA);
-        }
+    double err[NUMPASSES];
 
-    //calculate the inner products;
+    for (int i = 0; i < NUMPASSES; i++)
+    {
+        rho r(GRADSTEP, KAPPA[i]);
 
-    //for V
-    static std::complex<double> rhohatV[2 * N + 1][N];
-    std::cout << "Computing inner product coefficiencts for V... " << std::endl;
-    for (int n = 0; n < N; n++)
-        for (int m = 0; m <= n; m++)
-        {
+        std::cout << "i = " << i + 1 << " out of "<< NUMPASSES <<std::endl;
 
-        
-             rhohatV[m][n] = L2InnerProduct(&r, &v[m][n], NUMGRIDS);
-
-             rhohatV[m+N][n] = L2InnerProduct(&r, &v[m + N][n], NUMGRIDS);
-
-             std::cout << rhohatV[m][n] <<" "<<  rhohatV[m + N][n] << std::endl;
-       
-        }
-    std::cout << "Done!" << std::endl;
-
-    //for W.
-    static std::complex<double> rhohatW[2 * N + 1][N];
-    std::cout << "Computing inner product coefficiencts for W... " << std::endl;
-    for (int n = 0; n < N; n++)
-        for (int m = 0; m <= n; m++)
-        {
-
-            rhohatW[m][n] = L2InnerProduct(&r, &w[m][n], NUMGRIDS);
-
-            rhohatW[m + N][n] = L2InnerProduct(&r, &w[m + N][n], NUMGRIDS);
-
-            std::cout << rhohatW[m][n] << " " << rhohatW[m + N][n] << std::endl;
-
-        }
-    std::cout << "Done!" << std::endl;
-
-    //and for X.
-    static std::complex<double> rhohatX[2 * N + 1][N];
-    std::cout << "Computing inner product coefficiencts for X... " << std::endl;
-    for (int n = 0; n < N; n++)
-        for (int m = 0; m <= n; m++)
-        {
-
-            rhohatX[m][n] = L2InnerProduct(&r, &x[m][n], NUMGRIDS);
-
-            rhohatX[m + N][n] = L2InnerProduct(&r, &x[m + N][n], NUMGRIDS);
-
-            std::cout << rhohatX[m][n] << " " << rhohatX[m + N][n] << std::endl;
-
-        }
-    std::cout << "Done!" << std::endl <<std::endl;
-
-    std::cout << "Gathering summation... ";
-  
-
-    //declare terms in the series.
-    SphericalHarmonic Vterm[2 * N + 1][N];
-    SphericalHarmonic Wterm[2 * N + 1][N];
-    SphericalHarmonic Xterm[2 * N + 1][N];
-
-
-    //declare the approximation.
-    VectorFieldSum rhoapprox;
-
-    //construct the summation. Note we must compute the L2 norm of the basis functions to do so, so this takes a few seconds..
+        //set up the basis functions. an index of [m+N][n] corresponds to negative values of m.
         for (int n = 0; n < N; n++)
             for (int m = 0; m <= n; m++)
             {
-                
+                v[m][n] = V(m, n, GRADSTEP, KAPPA[i]);
+                v[m + N][n] = V(-m, n, GRADSTEP, KAPPA[i]);
+                w[m][n] = W(m, n, GRADSTEP, KAPPA[i]);
+                w[m + N][n] = W(-m, n, GRADSTEP, KAPPA[i]);
+                x[m][n] = X(m, n, GRADSTEP, KAPPA[i]);
+                x[m + N][n] = X(-m, n, GRADSTEP, KAPPA[i]);
+            }
+
+        //calculate the inner products;
+
+        //for V
+        static std::complex<double> rhohatV[2 * N + 1][N];
+        std::cout << "Computing inner product coefficiencts for V... " << std::endl;
+        for (int n = 0; n < N; n++)
+            for (int m = 0; m <= n; m++)
+            {
+
+
+                rhohatV[m][n] = L2InnerProduct(&r, &v[m][n], NUMGRIDS);
+
+                rhohatV[m + N][n] = L2InnerProduct(&r, &v[m + N][n], NUMGRIDS);
+                std::cout << "|";
+                //std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatV[m][n] << " " << rhohatV[m + N][n] << std::endl;
+
+            }
+        std::cout << "Done!" << std::endl;
+
+        //for W.
+        static std::complex<double> rhohatW[2 * N + 1][N];
+        std::cout << "Computing inner product coefficiencts for W... " << std::endl;
+        for (int n = 0; n < N; n++)
+            for (int m = 0; m <= n; m++)
+            {
+
+                rhohatW[m][n] = L2InnerProduct(&r, &w[m][n], NUMGRIDS);
+
+                rhohatW[m + N][n] = L2InnerProduct(&r, &w[m + N][n], NUMGRIDS);
+
+                std::cout << "|";
+                //std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatW[m][n] << " " << rhohatW[m + N][n] << std::endl;
+
+            }
+        std::cout << "Done!" << std::endl;
+
+        //and for X.
+        static std::complex<double> rhohatX[2 * N + 1][N];
+        std::cout << "Computing inner product coefficiencts for X... " << std::endl;
+        for (int n = 0; n < N; n++)
+            for (int m = 0; m <= n; m++)
+            {
+
+                rhohatX[m][n] = L2InnerProduct(&r, &x[m][n], NUMGRIDS);
+
+                rhohatX[m + N][n] = L2InnerProduct(&r, &x[m + N][n], NUMGRIDS);
+
+                std::cout << "|";
+                //std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatX[m][n] << " " << rhohatX[m + N][n] << std::endl;
+
+            }
+        std::cout << "Done!" << std::endl << std::endl;
+
+        std::cout << "Gathering summation... ";
+
+
+        //declare terms in the series.
+        SphericalHarmonic Vterm[2 * N + 1][N];
+        SphericalHarmonic Wterm[2 * N + 1][N];
+        SphericalHarmonic Xterm[2 * N + 1][N];
+
+
+        //declare the approximation.
+        VectorFieldSum rhoapprox;
+
+        //construct the summation. Note we must compute the L2 norm of the basis functions to do so, so this takes a few seconds..
+        for (int n = 0; n < N; n++)
+            for (int m = 0; m <= n; m++)
+            {
+
                 Vterm[m][n] = SphericalHarmonic(rhohatV[m][n], v[m][n]);
-                if(m > 0)
-                Vterm[m+N][n] = SphericalHarmonic(rhohatV[m+N][n], v[m+N][n]);
-                
+                if (m > 0)
+                    Vterm[m + N][n] = SphericalHarmonic(rhohatV[m + N][n], v[m + N][n]);
+
 
                 Wterm[m][n] = SphericalHarmonic(rhohatW[m][n], w[m][n]);
-                if(m > 0)
-                Wterm[m + N][n] = SphericalHarmonic(rhohatW[m+N][n], w[m+N][n]);
+                if (m > 0)
+                    Wterm[m + N][n] = SphericalHarmonic(rhohatW[m + N][n], w[m + N][n]);
 
-                
+
 
                 Xterm[m][n] = SphericalHarmonic(rhohatX[m][n], x[m][n]);
                 if (m > 0)
-                Xterm[m + N][n] = SphericalHarmonic(rhohatX[m + N][n], x[m + N][n]);
+                    Xterm[m + N][n] = SphericalHarmonic(rhohatX[m + N][n], x[m + N][n]);
 
                 rhoapprox.append(Vterm[m][n]);
                 if (m > 0)
@@ -390,25 +403,32 @@ int main()
                 rhoapprox.append(Wterm[m][n]);
                 if (m > 0)
                     rhoapprox.append(Wterm[m + N][n]);
-                
+
                 rhoapprox.append(Xterm[m][n]);
                 if (m > 0)
                     rhoapprox.append(Xterm[m + N][n]);
 
-                
+
                 std::cout << "|";
 
             }
-    std::cout << "Done!" << std::endl << std::endl;
+        std::cout << "Done!" << std::endl << std::endl;
 
 
-    //Compute the error in approximating rho by it's expansion in Spherical Harmonics.
-    std::cout << "Error in approximation(L2): ";
-    std::cout << L2Difference(&r, &rhoapprox, NUMGRIDS) << std::endl;
-
-    std::cout << "Error in approximation(LInf): ";
-    std::cout << LInfDifference(&r, &rhoapprox, NUMGRIDS) << std::endl;
-
+        //Compute the error in approximating rho by it's expansion in Spherical Harmonics.
+        std::cout << "Error in approximation(L2): ";
+        std::cout << (err[i] = L2Difference(&r, &rhoapprox, NUMGRIDS)) << std::endl;
+        std::cout << std::endl;
+    }
+    int minindex = 0;
+  
+    for (int i = 0; i < NUMPASSES; i++)
+        if (err[i] < err[minindex])
+            minindex = i;
+           
+    
+    std::cout << std::endl << std::endl << "Min at Kappa = " << KAPPA[minindex] << std::endl;
+    std::cout << "Min error = " << err[minindex];
     return 0;
 }
 

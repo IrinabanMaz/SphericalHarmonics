@@ -84,7 +84,7 @@ struct RectCoord
 };
 
 
-//addition and subtraction operators for rectangular coordinates.
+//Arithmetic operators for rectangular coordinates.
 RectCoord operator +(RectCoord a, RectCoord b)
 {
     return RectCoord(a.x + b.x, a.y + b.y, a.z + b.z);
@@ -124,12 +124,16 @@ PolarCoord RectToSphere(RectCoord x)
 {
     PolarCoord temp;
     temp.rho = sqrt(x.x * x.x + x.y * x.y + x.z * x.z);
-    if (norm(x.x) > 10e-9)
-        temp.s.phi = atan(x.y / x.x);
-    else
-        temp.s.phi = MATHPI / 2;
 
+    std::complex<double> slope = x.y / x.x;
+    if (norm(x.x) > 10e-9)
+        temp.s.phi = atan(slope);
+    else if (abs(x.y) > 10e-9)
+        temp.s.phi = MATHPI / 2 * x.y / abs(x.y);
+    else
+        temp.s.phi = 0;
     if (norm(temp.rho) > 10e-9)
+
         temp.s.theta = acos(x.z / temp.rho);
     else
         temp.s.theta = 0;
@@ -193,15 +197,15 @@ PolarCoord surfaceGrad(SurfaceScalarFunction* u, SurfaceCoord s, double stepsize
 { 
     //Construct unit vectors.
     PolarCoord ephi , etheta;
-    ephi  = RectToSphere(RectCoord(sin(s.phi),cos(s.phi) ,0));
+    ephi  = RectToSphere(RectCoord(-sin(s.phi),cos(s.phi) ,0));
     etheta = RectToSphere(RectCoord(cos(s.theta) * cos(s.phi) , cos(s.theta) * sin(s.phi) , -sin(s.theta)));
 
     //evaluate partial derivative with respect to theta.
     SurfaceCoord thetaPlus = SurfaceCoord(s.phi, s.theta + stepsize / 2);
     SurfaceCoord thetaMinus = SurfaceCoord(s.phi, s.theta - stepsize / 2);
 
-    double dtheta = 0;
-    dtheta = (*u)(thetaPlus).real() - (*u)(thetaMinus).real();
+    std::complex<double> dtheta = 0;
+    dtheta = (*u)(thetaPlus) - (*u)(thetaMinus);
     dtheta /= stepsize;
 
     //add contribution to gradient.
@@ -212,9 +216,9 @@ PolarCoord surfaceGrad(SurfaceScalarFunction* u, SurfaceCoord s, double stepsize
     SurfaceCoord phiPlus = SurfaceCoord(s.phi + stepsize / 2, s.theta);
     SurfaceCoord phiMinus = SurfaceCoord(s.phi - stepsize / 2, s.theta);
 
-    double dphi = 0;
-    dphi += (*u)(phiPlus).real() - (*u)(phiMinus).real();
-    dphi /= sin(s.theta).real() * stepsize + (1 + kappa) * stepsize;
+    std::complex<double> dphi = 0;
+    dphi += (*u)(phiPlus) - (*u)(phiMinus);
+    dphi /= sin(s.theta) * stepsize + kappa * stepsize;
 
     //add contribution to gradient and return.
     temp = temp + dphi * etheta;
@@ -321,7 +325,7 @@ std::complex<double> L2InnerProduct(SphericalVectorField* f1, SphericalVectorFie
 }
 
 //computes the L2 difference of two vector fields on the Surface of a unit sphere using a trapezoidal rule in both coordinates.
-std::complex<double> L2Difference(SphericalVectorField* f1, SphericalVectorField* f2, int n)
+double L2Difference(SphericalVectorField* f1, SphericalVectorField* f2, int n)
 {
     std::complex<double> total = 0;
 
@@ -334,7 +338,7 @@ std::complex<double> L2Difference(SphericalVectorField* f1, SphericalVectorField
             total += sin(p) * dot(diff, diff) * 2.0 * (MATHPI / n) * (MATHPI / n);
         }
 
-    return total;
+    return sqrt(total.real());
 }
 
 //computes the sup norm of two vector fields on the surface of a unit sphere.
