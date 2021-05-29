@@ -84,9 +84,7 @@ public:
             for (int i = 1; i < L + 1; i++)
                 values[m + 1][i] = ((((double)i - (double)m)) * input * values[m][i] - ((double)i + (double)m) * values[m][i - 1]) / s;
 
-            if (maxdegree > 1)
-                values[m + 1][0] = (m * values[m + 1][2] + 3 * input * values[m + 1][1]) / ((double)m + 1);
-
+            values[m + 1][0] = ((-(double)m + 1) * values[m][1] + -((double)m + 1) * values[m][0]) / s;
 
         }
 
@@ -99,7 +97,7 @@ public:
         if (m >= 0)
             return values[m][i];
         else if (m < 0)
-            return ((m % 2 == 0) ? 1 : -1) * (double)factorial(i - m) / factorial(i + m) * values[-m][i];
+            return ((m % 2 == 0) ? 1 : -1) * (double)factorial(i + m) / factorial(i - m) * values[-m][i];
 
         else return -100;
     }
