@@ -80,7 +80,7 @@ public:
     PolarCoord operator()(PolarCoord x)
     {
         Y y(m, n , k);
-        return surfaceGrad(&y, x.s, h , k);
+        return surfaceGrad(&y, x.s, h);
 
     }
 
@@ -112,7 +112,7 @@ public:
         Y y(m, n , k);
 
         temp = -((double)n+1) * y(x.s) * PolarCoord(1, x.s);
-        temp = temp + surfaceGrad(&y, x.s, h , k);
+        temp = temp + surfaceGrad(&y, x.s, h);
 
         return temp;
 
@@ -148,7 +148,7 @@ public:
         Y y(m, n , k);
 
         temp = (double)n * y(x.s) * PolarCoord(1 , x.s);
-        temp = surfaceGrad(&y, x.s, h, k) + temp;
+        temp = surfaceGrad(&y, x.s, h) + temp;
 
         return temp;
 
@@ -185,7 +185,7 @@ public:
         Y y(m, n , k);
 
         
-        temp = surfaceGrad(&y, x.s, h , k);
+        temp = surfaceGrad(&y, x.s, h);
 
         return RectToSphere(cross(SphereToRect(er), SphereToRect(temp)));
 
@@ -215,13 +215,14 @@ public:
     {
         coef = c;
         f = &f0;
-        denom = L2InnerProduct(f, f, 100);
+        denom = L2InnerProduct(f, f, 20);
     }
 
     PolarCoord operator()(PolarCoord x)
     {
         PolarCoord fx = (*f)(x);
         PolarCoord Fnormalized = (norm(denom) < 10e-9) ? PolarCoord(0.0 , SurfaceCoord(0.0 , 0.0)) : (1.0 / norm(denom) )* fx;
+
         return coef * Fnormalized;
     }
 
@@ -246,69 +247,60 @@ public:
     PolarCoord operator()(PolarCoord x)
     {
         //identity function
-        //return x;
+        return x;
 
         //scale function.
-        //return 2 * x;
+        //return 100 * x;
 
 
         //rotation of x by pi/4.
         //return PolarCoord(x.rho , x.s + SurfaceCoord(MATHPI / 4.0 , 0));
 
-        V z(2, 2, step, k);
+        //V z(2, 2, step, k);
 
-        return z(x);
+        //return z(x);
     }
 };
 
 int main()
 {
-    std::setprecision(12);
-    
+
+
+   
     
     //numerical parameters.
     
     //series truncation
-    const int N = 5;
+    const int N = 7;
     const int NUMPASSES = 50;
     
     //step size for gradient.
     const double GRADSTEP = 10e-10;
 
-    
-    //kappa for gradient computation.
-    double KAPPA[NUMPASSES];
-    for (int i = 0; i < NUMPASSES; i++)
-    {
-        KAPPA[i] = exp(-log(10)*(double)i * 4.0 / NUMPASSES );
-    }
-
     //number of panel points per dimension in integrals.
-    const int NUMGRIDS = 100;
+    const int NUMGRIDS = 20;
+
+
 
     //Basis functions. one for each term in the series.
     static V v[2*N + 1][N];
     static W w[2*N + 1][N];
     static X x[2*N + 1][N];
 
-    double err[NUMPASSES];
 
-    for (int i = 0; i < NUMPASSES; i++)
-    {
-        rho r(GRADSTEP, KAPPA[i]);
+        rho r(GRADSTEP, 0.0);
 
-        std::cout << "i = " << i + 1 << " out of "<< NUMPASSES <<std::endl;
 
         //set up the basis functions. an index of [m+N][n] corresponds to negative values of m.
         for (int n = 0; n < N; n++)
             for (int m = 0; m <= n; m++)
             {
-                v[m][n] = V(m, n, GRADSTEP, KAPPA[i]);
-                v[m + N][n] = V(-m, n, GRADSTEP, KAPPA[i]);
-                w[m][n] = W(m, n, GRADSTEP, KAPPA[i]);
-                w[m + N][n] = W(-m, n, GRADSTEP, KAPPA[i]);
-                x[m][n] = X(m, n, GRADSTEP, KAPPA[i]);
-                x[m + N][n] = X(-m, n, GRADSTEP, KAPPA[i]);
+                v[m][n] = V(m, n, GRADSTEP, 0.0);
+                v[m + N][n] = V(-m, n, GRADSTEP, 0.0);
+                w[m][n] = W(m, n, GRADSTEP, 0.0);
+                w[m + N][n] = W(-m, n, GRADSTEP, 0.0);
+                x[m][n] = X(m, n, GRADSTEP, 0.0);
+                x[m + N][n] = X(-m, n, GRADSTEP, 0.0);
             }
 
         //calculate the inner products;
@@ -324,8 +316,8 @@ int main()
                 rhohatV[m][n] = L2InnerProduct(&r, &v[m][n], NUMGRIDS);
 
                 rhohatV[m + N][n] = L2InnerProduct(&r, &v[m + N][n], NUMGRIDS);
-                std::cout << "|";
-                //std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatV[m][n] << " " << rhohatV[m + N][n] << std::endl;
+                //std::cout << "|";
+                std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatV[m][n] << " " << rhohatV[m + N][n] << std::endl;
 
             }
         std::cout << "Done!" << std::endl;
@@ -417,19 +409,13 @@ int main()
 
         //Compute the error in approximating rho by it's expansion in Spherical Harmonics.
         std::cout << "Error in approximation(L2): ";
-        std::cout << (err[i] = L2Difference(&r, &rhoapprox, NUMGRIDS)) << std::endl;
+        std::cout << L2Difference(&r, &rhoapprox, NUMGRIDS)<< std::endl;
         std::cout << std::endl;
-    }
-    int minindex = 0;
-  
-    for (int i = 0; i < NUMPASSES; i++)
-        if (err[i] < err[minindex])
-            minindex = i;
-           
     
-    std::cout << std::endl << std::endl << "Min at Kappa = " << KAPPA[minindex] << std::endl;
-    std::cout << "Min error = " << err[minindex];
+           
+
     return 0;
+
 }
 
 

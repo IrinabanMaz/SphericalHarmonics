@@ -5,7 +5,7 @@
 #include <complex>
 #include <vector>
 
-#define MATHPI 4 * atan(1)
+#define MATHPI 4.0 * atan(1)
 
 //structures for the different coordinate systems. Surface coordinates are for the unit sphere. Polar coordinates are actually Spherical Coordinates.
 //all coordinates are complex.
@@ -36,8 +36,8 @@ public:
 
     SurfaceCoord(std::complex<double> a, std::complex<double> b)
     {
-        phi = a;
-        theta = b;
+        theta = a;
+        phi = b;
     }
 };
 struct PolarCoord
@@ -126,14 +126,9 @@ PolarCoord RectToSphere(RectCoord x)
     temp.rho = sqrt(x.x * x.x + x.y * x.y + x.z * x.z);
 
     std::complex<double> slope = x.y / x.x;
-    if (norm(x.x) > 10e-9)
-        temp.s.phi = atan(slope);
-    else if (abs(x.y) > 10e-9)
-        temp.s.phi = MATHPI / 2 * x.y / abs(x.y);
-    else
-        temp.s.phi = 0;
-    if (norm(temp.rho) > 10e-9)
+    temp.s.phi = atan2(x.y.real(), x.x.real());
 
+    if (norm(temp.rho) > 10e-12)
         temp.s.theta = acos(x.z / temp.rho);
     else
         temp.s.theta = 0;
@@ -193,36 +188,58 @@ public:
 
 //Computes the numerical gradient of a Surface to Scalar function using a symmetric difference with specified stepsize.
 //kappa exists to prevent division by zero and should be set small for accuracy.
-PolarCoord surfaceGrad(SurfaceScalarFunction* u, SurfaceCoord s, double stepsize, double kappa)
+PolarCoord surfaceGrad(SurfaceScalarFunction* u, SurfaceCoord s, double stepsize)
 { 
+    
     //Construct unit vectors.
     PolarCoord ephi , etheta;
     ephi  = RectToSphere(RectCoord(-sin(s.phi),cos(s.phi) ,0));
     etheta = RectToSphere(RectCoord(cos(s.theta) * cos(s.phi) , cos(s.theta) * sin(s.phi) , -sin(s.theta)));
 
     //evaluate partial derivative with respect to theta.
-    SurfaceCoord thetaPlus = SurfaceCoord(s.phi, s.theta + stepsize / 2);
-    SurfaceCoord thetaMinus = SurfaceCoord(s.phi, s.theta - stepsize / 2);
+    SurfaceCoord phiPlus = SurfaceCoord(s.phi, s.theta + stepsize / 2);
+    SurfaceCoord phiMinus = SurfaceCoord(s.phi, s.theta - stepsize / 2);
 
-    std::complex<double> dtheta = 0;
-    dtheta = (*u)(thetaPlus) - (*u)(thetaMinus);
-    dtheta /= stepsize;
+    std::complex<double> dphi = 0;
+    dphi = (*u)(phiPlus) - (*u)(phiMinus);
+    dphi /= sin(s.theta.real()) * stepsize;
 
     //add contribution to gradient.
     PolarCoord temp;
-    temp = temp + dtheta * etheta;
+    temp = dphi * ephi;
 
     //evaulate partial derivative with respect to phi
-    SurfaceCoord phiPlus = SurfaceCoord(s.phi + stepsize / 2, s.theta);
-    SurfaceCoord phiMinus = SurfaceCoord(s.phi - stepsize / 2, s.theta);
+    SurfaceCoord thetaPlus = SurfaceCoord(s.phi + stepsize / 2, s.theta);
+    SurfaceCoord thetaMinus = SurfaceCoord(s.phi - stepsize / 2, s.theta);
 
-    std::complex<double> dphi = 0;
-    dphi += (*u)(phiPlus) - (*u)(phiMinus);
-    dphi /= sin(s.theta) * stepsize + kappa * stepsize;
+    std::complex<double> dtheta = 0;
+    dtheta = (*u)(phiPlus) - (*u)(phiMinus);
+    dtheta /= stepsize;
 
     //add contribution to gradient and return.
-    temp = temp + dphi * etheta;
+    temp = temp + dtheta * etheta;
     return temp;
+
+    
+     /*
+    //compute the gradient by converting to rectangular coordinates first.
+    RectCoord x = SurfaceToRect(s);
+    RectCoord xplus = x + RectCoord(stepsize / 2, 0, 0);
+    RectCoord xminus = x + RectCoord(-stepsize / 2, 0, 0);
+    RectCoord yplus = x + RectCoord(0 ,stepsize / 2 , 0);
+    RectCoord yminus = x + RectCoord(0 ,-stepsize / 2, 0);
+    RectCoord zplus = x + RectCoord(0, 0 , stepsize / 2);
+    RectCoord zminus = x + RectCoord(0 , 0 ,-stepsize / 2);
+    std::complex<double> dx = (*u)(RectToSurface(xplus)) - (*u)(RectToSurface(xminus));
+    dx /= stepsize;
+    std::complex<double> dy = (*u)(RectToSurface(yplus)) - (*u)(RectToSurface(yminus));
+    dy /= stepsize;
+    std::complex<double> dz = (*u)(RectToSurface(zplus)) - (*u)(RectToSurface(zminus));
+    dz /= stepsize;
+
+    return RectToSphere(RectCoord(dx, dy, dz));
+    */
+
 }
 
 //Encapsulates a Spherical coordinate to Scalar function.
@@ -311,14 +328,22 @@ public:
 //Computes the L2 inner product of two vector fields on the Surface of a unit sphere using a trapezoidal rule in both coordinates.
 std::complex<double> L2InnerProduct(SphericalVectorField* f1, SphericalVectorField* f2, int n)
 {
+
+    double GLnodes[16] = { -0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274 
+                          - 0.6178762444026438  , 0.6178762444026438 , -0.7554044083550030 , 0.7554044083550030 , -0.8656312023878318 , 0.8656312023878318  ,
+                          -0.9445750230732326 , 0.9445750230732326  , -0.9894009349916499  , 0.9894009349916499 };
+
+    double GLweights[16] = { 0.1894506104550685 , 0.1894506104550685 , 0.1826034150449236  , 0.1826034150449236  , 0.1691565193950025  , 0.1691565193950025 ,
+                            0.1495959888165767  , 0.1495959888165767 , 0.1246289712555339  , 0.1246289712555339  , 0.0951585116824928  , 0.0951585116824928 ,
+                            0.0622535239386479  , 0.0622535239386479 , 0.0271524594117541  , 0.0271524594117541 };
     std::complex<double> total = 0;
 
-    for (double p = 0.0; p < MATHPI; p += MATHPI / n)
-        for (double t = 0.0; t < 2.0 * MATHPI; t += 2.0 * MATHPI / n)
+    for (double p = 0.0; p < 2 * MATHPI; p += 2.0 * MATHPI / n)
+        for (int i = 0; i < 16; i++)
         {
-            SurfaceCoord s(p, t);
+            SurfaceCoord s( MATHPI / 2.0 * (GLnodes[i] + 1), p);
             PolarCoord x(s);
-            total += sin(p) * dot((*f1)(x), (*f2)(x)) * 2.0 * (MATHPI / n) * (MATHPI / n);
+            total += sin(MATHPI / 2.0 * (GLnodes[i] + 1)) * GLweights[i] * dot((*f1)(x), (*f2)(x)) *  (MATHPI / n) * MATHPI;
         }
 
     return total;
@@ -327,15 +352,22 @@ std::complex<double> L2InnerProduct(SphericalVectorField* f1, SphericalVectorFie
 //computes the L2 difference of two vector fields on the Surface of a unit sphere using a trapezoidal rule in both coordinates.
 double L2Difference(SphericalVectorField* f1, SphericalVectorField* f2, int n)
 {
+    double GLnodes[16] = { -0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274
+                          - 0.6178762444026438  , 0.6178762444026438 , -0.7554044083550030 , 0.7554044083550030 , -0.8656312023878318 , 0.8656312023878318  ,
+                          -0.9445750230732326 , 0.9445750230732326  , -0.9894009349916499  , 0.9894009349916499 };
+
+    double GLweights[16] = { 0.1894506104550685 , 0.1894506104550685 , 0.1826034150449236  , 0.1826034150449236  , 0.1691565193950025  , 0.1691565193950025 ,
+                            0.1495959888165767  , 0.1495959888165767 , 0.1246289712555339  , 0.1246289712555339  , 0.0951585116824928  , 0.0951585116824928 ,
+                            0.0622535239386479  , 0.0622535239386479 , 0.0271524594117541  , 0.0271524594117541 };
     std::complex<double> total = 0;
 
-    for (double p = 0.0; p < MATHPI; p += MATHPI / n)
-        for (double t = 0.0; t < 2.0 * MATHPI; t += 2.0 * MATHPI / n)
+    for (double p = 0.0; p < 2 * MATHPI; p += 2.0 * MATHPI / n)
+        for (int i = 0; i < 16; i++)
         {
-            SurfaceCoord s(p, t);
+            SurfaceCoord s(MATHPI  / 2.0 * (GLnodes[i] + 1), p);
             PolarCoord x(s);
-            RectCoord diff = RectCoord((*f1)(x)) - RectCoord((*f2)(x));
-            total += sin(p) * dot(diff, diff) * 2.0 * (MATHPI / n) * (MATHPI / n);
+            PolarCoord diff = (*f1)(x) - (*f2)(x);
+            total += sin(MATHPI / 2.0 * (GLnodes[i] + 1)) * GLweights[i] * dot(diff, diff) * (MATHPI / n) * MATHPI / 2.0;
         }
 
     return sqrt(total.real());

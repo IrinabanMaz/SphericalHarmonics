@@ -52,7 +52,7 @@ public:
         input = val;
         maxorder = abs(M);
         maxdegree = L;
-        double s = sqrt(1 - val * val) + 10e-12;
+        double s = sqrt(1 - input * input) + 10e-12;
 
         
 
@@ -63,18 +63,14 @@ public:
             values[m].resize(std::max(L + 1 , 2));
         
         //set values in case of boundary condition.
-        if (1.0 - val < 10e-6)
-            for (int i = 0; i < L; i++)
-                for (int m = 0; m < M; m++)
-                    values[m][i] = 1.0;
 
         //set initial values.
-        values[0][0] = 1;
+        values[0][0] = 1.0;
         values[0][1] = input;
 
         //set values for m = 0 using recurrence in terms of two previous i values.
         for (int i = 1; i < L; i++)
-            values[0][i + 1] = ((2 * (double)i + 1) * input * values[0][i] - i * values[0][i - 1]) / ((double)i + 1);
+            values[0][i + 1] = ((2.0 * (double)i + 1) * input * values[0][i] - (double)i * values[0][i - 1]) / ((double)i + 1);
 
 
         //computes values for larger values of m in terms of previous value of m. for i = 0, uses the values from i = 1, i = 2, instead.
@@ -84,7 +80,7 @@ public:
             for (int i = 1; i < L + 1; i++)
                 values[m + 1][i] = ((((double)i - (double)m)) * input * values[m][i] - ((double)i + (double)m) * values[m][i - 1]) / s;
 
-            values[m + 1][0] = ((-(double)m + 1) * values[m][1] + -((double)m + 1) * values[m][0]) / s;
+            values[m + 1][0] = ((-(double)m + 1.0) * values[m][1] + -((double)m + 1.0) * values[m][0]) / s;
 
         }
 
@@ -97,7 +93,7 @@ public:
         if (m >= 0)
             return values[m][i];
         else if (m < 0)
-            return ((m % 2 == 0) ? 1 : -1) * (double)factorial(i + m) / factorial(i - m) * values[-m][i];
+            return ((m % 2 == 0) ? 1.0 : -1.0) * (double)factorial(i + m) / (double)factorial(i - m) * values[-m][i];
 
         else return -100;
     }
@@ -106,5 +102,31 @@ public:
 double testpoly(double x)
 {
     double xsq = 1 - x * x;
-    return 105 * xsq * xsq;
+    xsq = pow(xsq, 2.5);
+    return -10395.0 *x * xsq;
+}
+
+double testerr()
+{
+    int m = 5;
+    int l = 6;
+
+    Legendre P;
+    
+    double GLnodes[16] = { -0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274
+                          - 0.6178762444026438  , 0.6178762444026438 , -0.7554044083550030 , 0.7554044083550030 , -0.8656312023878318 , 0.8656312023878318  ,
+                          -0.9445750230732326 , 0.9445750230732326  , -0.9894009349916499  , 0.9894009349916499 };
+
+    double GLweights[16] = { 0.1894506104550685 , 0.1894506104550685 , 0.1826034150449236  , 0.1826034150449236  , 0.1691565193950025  , 0.1691565193950025 ,
+                            0.1495959888165767  , 0.1495959888165767 , 0.1246289712555339  , 0.1246289712555339  , 0.0951585116824928  , 0.0951585116824928 ,
+                            0.0622535239386479  , 0.0622535239386479 , 0.0271524594117541  , 0.0271524594117541 };
+    double total = 0.0;
+    for (int i = 0; i < 16; i++)
+    {
+        P.populate(GLnodes[i], m, l);
+        double err = P.getValue(m, l) - testpoly(GLnodes[i]);
+        total += GLweights[i] * err * err;
+    }
+
+    return total;
 }
