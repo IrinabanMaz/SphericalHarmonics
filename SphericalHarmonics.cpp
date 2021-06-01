@@ -77,7 +77,7 @@ public:
         k = kap;
     }
 
-    PolarCoord operator()(PolarCoord x)
+    SphereCoord operator()(SphereCoord x)
     {
         Y y(m, n , k);
         return surfaceGrad(&y, x.s, h);
@@ -106,12 +106,12 @@ public:
         k = kap;
     }
 
-    PolarCoord operator()(PolarCoord x)
+    SphereCoord operator()(SphereCoord x)
     {
-        PolarCoord temp;
+        SphereCoord temp;
         Y y(m, n , k);
 
-        temp = -((double)n+1) * y(x.s) * PolarCoord(1, x.s);
+        temp = -((double)n+1) * y(x.s) * SphereCoord(1, x.s);
         temp = temp + surfaceGrad(&y, x.s, h);
 
         return temp;
@@ -142,12 +142,12 @@ public:
         k = kap;
     }
 
-    PolarCoord operator()(PolarCoord x)
+    SphereCoord operator()(SphereCoord x)
     {
-        PolarCoord temp;
+        SphereCoord temp;
         Y y(m, n , k);
 
-        temp = (double)n * y(x.s) * PolarCoord(1 , x.s);
+        temp = (double)n * y(x.s) * SphereCoord(1 , x.s);
         temp = surfaceGrad(&y, x.s, h) + temp;
 
         return temp;
@@ -178,10 +178,10 @@ public:
         k = kap;
     }
 
-    PolarCoord operator()(PolarCoord x)
+    SphereCoord operator()(SphereCoord x)
     {
-        PolarCoord temp;
-        PolarCoord er = PolarCoord(1.0, x.s);
+        SphereCoord temp;
+        SphereCoord er = SphereCoord(1.0, x.s);
         Y y(m, n , k);
 
         
@@ -218,10 +218,10 @@ public:
         denom = L2InnerProduct(f, f, 20);
     }
 
-    PolarCoord operator()(PolarCoord x)
+    SphereCoord operator()(SphereCoord x)
     {
-        PolarCoord fx = (*f)(x);
-        PolarCoord Fnormalized = (norm(denom) < 10e-9) ? PolarCoord(0.0 , SurfaceCoord(0.0 , 0.0)) : (1.0 / norm(denom) )* fx;
+        SphereCoord fx = (*f)(x);
+        SphereCoord Fnormalized = (norm(denom) < 10e-9) ? SphereCoord(0.0 , SurfaceCoord(0.0 , 0.0)) : (1.0 / norm(denom) )* fx;
 
         return coef * Fnormalized;
     }
@@ -244,7 +244,7 @@ public:
         k = kappa;
     }
 
-    PolarCoord operator()(PolarCoord x)
+    SphereCoord operator()(SphereCoord x)
     {
         //identity function
         return x;
@@ -254,9 +254,9 @@ public:
 
 
         //rotation of x by pi/4.
-        //return PolarCoord(x.rho , x.s + SurfaceCoord(MATHPI / 4.0 , 0));
+        //return SphereCoord(x.rho , x.s + SurfaceCoord(MATHPI / 4.0 , 0));
 
-        //V z(2, 2, step, k);
+        V z(2, 2, step, k);
 
         //return z(x);
     }
@@ -333,8 +333,8 @@ int main()
 
                 rhohatW[m + N][n] = L2InnerProduct(&r, &w[m + N][n], NUMGRIDS);
 
-                std::cout << "|";
-                //std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatW[m][n] << " " << rhohatW[m + N][n] << std::endl;
+                //std::cout << "|";
+                std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatW[m][n] << " " << rhohatW[m + N][n] << std::endl;
 
             }
         std::cout << "Done!" << std::endl;
@@ -350,8 +350,8 @@ int main()
 
                 rhohatX[m + N][n] = L2InnerProduct(&r, &x[m + N][n], NUMGRIDS);
 
-                std::cout << "|";
-                //std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatX[m][n] << " " << rhohatX[m + N][n] << std::endl;
+                //std::cout << "|";
+                std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatX[m][n] << " " << rhohatX[m + N][n] << std::endl;
 
             }
         std::cout << "Done!" << std::endl << std::endl;
