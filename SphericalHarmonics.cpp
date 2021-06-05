@@ -9,6 +9,7 @@
 
 
 
+typedef SphereCoord(*svf)(SphereCoord);
 
 
 
@@ -16,100 +17,102 @@
 
 
 
-
-//Encapsulation of the Scalar Harmonic Function Y.
+//Encapsulations of the Scalar Harmonic Function Y.
 //How to use:
 //1) declare and initialize a variable Y y(m , n , kappa);
 //2) call the function as y(x); where x is a spherical coordinate point.
-class Y : public SurfaceScalarFunction
+class YReal : public SurfaceScalarFunction
 {
 private:
     int m;
     int n;
-    //kappa value for computing gradient. See SurfaceGrad for more.
-    double kappa;
     Legendre poly;
 
 public:
-    Y(int a, int b , double k)
+    YReal(int a, int b )
     {
         m = a;
         n = b;
-        kappa = k;
-        
-
+       
     }
 
 
     //Implements the function Y 
-    std::complex<double> operator()(SurfaceCoord s)
+    double operator()(SurfaceCoord s)
     {
-        
-        poly.populate(cos(s.theta.real()) , m, n);
-        const std::complex<double> I(0.0, 1.0);
-        double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * MATHPI * (double)factorial(n + m)));
+    
+            
+        poly.populate(cos(s.theta) , m, n);
+       
+        double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * PI * (double)factorial(n + m)));
         //std::cout << coef << std::endl;
         
         coef *= poly.getValue(m, n);
 
         //std::cout << coef << std::endl;
         
-        return coef * exp( I * (double)m * s.phi);
+        return coef * cos((double)m * s.phi);
 
 
     }
 };
 
-//Encapsulation of gradient of Scalar Harmonic function. Not used.
-class G : public SphericalVectorField
+class YImag : public SurfaceScalarFunction
 {
 private:
     int m;
     int n;
-    double h;
-    double k;
+    Legendre poly;
+
 public:
-    G(int a, int b , double steps , double kap)
+    YImag(int a, int b)
     {
         m = a;
         n = b;
-        h = steps;
-        k = kap;
+
     }
 
-    SphereCoord operator()(SphereCoord x)
+
+    //Implements the function Y 
+    double operator()(SurfaceCoord s)
     {
-        Y y(m, n , k);
-        return surfaceGrad(&y, x.s, h);
+
+        poly.populate(cos(s.theta), m, n);
+        double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * PI * (double)factorial(n + m)));
+        //std::cout << coef << std::endl;
+
+        coef *= poly.getValue(m, n);
+
+        //std::cout << coef << std::endl;
+
+        return coef * sin((double)m * s.phi);
+
 
     }
-
-
 };
 
 
+
 //Spherical Harmonic Basis function encapsulations.
-class V : public SphericalVectorField
+class VReal : public SphericalVectorField
 {
     int m;
     int n;
     double h;
-    double k;
 public:
 
-    V(){}
-    V(int a, int b, double steps , double kap)
+    VReal(){}
+    VReal(int a, int b, double steps , double kap)
     {
         m = a;
         n = b;
         h = steps;
-        k = kap;
     }
 
     SphereCoord operator()(SphereCoord x)
     {
         SphereCoord temp;
-        Y y(m, n , k);
+        YReal y(m, n );
 
         temp = -((double)n+1) * y(x.s) * SphereCoord(1, x.s);
         temp = temp + surfaceGrad(&y, x.s, h);
@@ -125,27 +128,63 @@ public:
     }
 
 };
-class W : public SphericalVectorField
+
+class VImag : public SphericalVectorField
 {
     int m;
     int n;
     double h;
-    double k;
 public:
-    W(){}
 
-    W(int a, int b, double steps , double kap)
+    VImag() {}
+    VImag(int a, int b, double steps, double kap)
     {
         m = a;
         n = b;
         h = steps;
-        k = kap;
     }
 
     SphereCoord operator()(SphereCoord x)
     {
         SphereCoord temp;
-        Y y(m, n , k);
+        YImag y(m, n);
+
+        temp = -((double)n + 1) * y(x.s) * SphereCoord(1, x.s);
+        temp = temp + surfaceGrad(&y, x.s, h);
+
+        return temp;
+
+    }
+
+    void reset(int a, int b)
+    {
+        m = a;
+        n = b;
+    }
+
+};
+
+
+
+class WReal : public SphericalVectorField
+{
+    int m;
+    int n;
+    double h;
+public:
+    WReal(){}
+
+    WReal(int a, int b, double steps , double kap)
+    {
+        m = a;
+        n = b;
+        h = steps;
+    }
+
+    SphereCoord operator()(SphereCoord x)
+    {
+        SphereCoord temp;
+        YReal y(m, n);
 
         temp = (double)n * y(x.s) * SphereCoord(1 , x.s);
         temp = surfaceGrad(&y, x.s, h) + temp;
@@ -159,35 +198,108 @@ public:
         n = b;
     }
 };
-class X : public SphericalVectorField
+
+class WImag : public SphericalVectorField
 {
     int m;
     int n;
     double h;
-    double k;
-
 public:
+    WImag() {}
 
-    X(){}
-
-    X(int a, int b, double steps, double kap)
+    WImag(int a, int b, double steps, double kap)
     {
         m = a;
         n = b;
         h = steps;
-        k = kap;
+    }
+
+    SphereCoord operator()(SphereCoord x)
+    {
+        SphereCoord temp;
+        YImag y(m, n);
+
+        temp = (double)n * y(x.s) * SphereCoord(1, x.s);
+        temp = surfaceGrad(&y, x.s, h) + temp;
+
+        return temp;
+
+    }
+    void reset(int a, int b)
+    {
+        m = a;
+        n = b;
+    }
+};
+
+
+
+
+class XReal : public SphericalVectorField
+{
+    int m;
+    int n;
+    double h;
+
+public:
+
+    XReal(){}
+
+    XReal(int a, int b, double steps, double kap)
+    {
+        m = a;
+        n = b;
+        h = steps;
     }
 
     SphereCoord operator()(SphereCoord x)
     {
         SphereCoord temp;
         SphereCoord er = SphereCoord(1.0, x.s);
-        Y y(m, n , k);
+        YReal y(m, n);
 
         
         temp = surfaceGrad(&y, x.s, h);
 
-        return RectToSphere(cross(SphereToRect(er), SphereToRect(temp)));
+        return cross(er , temp);
+
+    }
+
+    void reset(int a, int b)
+    {
+        m = a;
+        n = b;
+    }
+
+};
+
+class XImag : public SphericalVectorField
+{
+    int m;
+    int n;
+    double h;
+
+public:
+
+    XImag() {}
+
+    XImag(int a, int b, double steps, double kap)
+    {
+        m = a;
+        n = b;
+        h = steps;
+    }
+
+    SphereCoord operator()(SphereCoord x)
+    {
+        SphereCoord temp;
+        SphereCoord er = SphereCoord(1.0, x.s);
+        YImag y(m, n);
+
+
+        temp = surfaceGrad(&y, x.s, h);
+
+        return cross(er , temp);
 
     }
 
@@ -204,78 +316,66 @@ class SphericalHarmonic : public SphericalVectorField
 {
 private:
 
-    std::complex<double> coef;
-    std::complex<double> denom;
-    SphericalVectorField* f;
+    double coefr;
+    double coefi;
+    double denom;
+    SphericalVectorField* fr;
+    SphericalVectorField* fi;
+
 
 public:
-    SphericalHarmonic() { coef = 1; f = nullptr; }
+    SphericalHarmonic() { coefr = 1; fr = nullptr; coefi = 1; fi = nullptr;
+    }
 
-    SphericalHarmonic(std::complex<double> c, SphericalVectorField& f0)
+    SphericalHarmonic(double cr, double ci ,  SphericalVectorField& f0r, SphericalVectorField& f0i)
     {
-        coef = c;
-        f = &f0;
-        denom = L2InnerProduct(f, f, 20);
+        coefr = cr;
+        coefi = ci;
+        fr = &f0r;
+        fi = &f0i;
+
+        denom = L2InnerProduct(fr, fr, 20) + L2InnerProduct(fi , fi , 20);
     }
 
     SphereCoord operator()(SphereCoord x)
     {
-        SphereCoord fx = (*f)(x);
-        SphereCoord Fnormalized = (norm(denom) < 10e-9) ? SphereCoord(0.0 , SurfaceCoord(0.0 , 0.0)) : (1.0 / norm(denom) )* fx;
+        SphereCoord frx = (*fr)(x);
+        SphereCoord Frnormalized; 
+        if (denom < 1e-18)
+            Frnormalized = SphereCoord(0.0, SurfaceCoord(0.0, 0.0));
+        else
+            Frnormalized = (1.0 /denom)* frx;
 
-        return coef * Fnormalized;
+        SphereCoord fix = (*fi)(x);
+        SphereCoord Finormalized;
+        if (denom < 1e-18)
+            Finormalized = SphereCoord(0.0, SurfaceCoord(0.0, 0.0));
+        else
+            Finormalized = (1.0 / denom) * fix;
+
+        return coefr * Frnormalized + coefi * Finormalized;
     }
 
 };
 
 //The function to approximate.
-class rho : public SphericalVectorField
-{
 
-private:
-
-    double step;
-    double k;
-public:
-    rho(){}
-    rho(double steps, double kappa) 
-    {
-        step = steps;
-        k = kappa;
-    }
-
-    SphereCoord operator()(SphereCoord x)
-    {
-        //identity function
-        return x;
-
-        //scale function.
-        //return 100 * x;
-
-
-        //rotation of x by pi/4.
-        //return SphereCoord(x.rho , x.s + SurfaceCoord(MATHPI / 4.0 , 0));
-
-        V z(2, 2, step, k);
-
-        //return z(x);
-    }
-};
 
 int main()
 {
 
+    std::cout << std::fixed << std::setprecision(5);
 
+    
    
     
     //numerical parameters.
     
     //series truncation
-    const int N = 7;
-    const int NUMPASSES = 50;
+    const int N = 5;
     
     //step size for gradient.
-    const double GRADSTEP = 10e-10;
+    const double GRADSTEP = 1e-5;
 
     //number of panel points per dimension in integrals.
     const int NUMGRIDS = 20;
@@ -283,79 +383,107 @@ int main()
 
 
     //Basis functions. one for each term in the series.
-    static V v[2*N + 1][N];
-    static W w[2*N + 1][N];
-    static X x[2*N + 1][N];
+    static VReal vr[2*N + 1][N];
+    static WReal wr[2*N + 1][N];
+    static XReal xr[2*N + 1][N];
 
-
-        rho r(GRADSTEP, 0.0);
+    static VImag vi[2 * N + 1][N];
+    static WImag wi[2 * N + 1][N];
+    static XImag xi[2 * N + 1][N];
+    
+    auto  r = SphericalVectorField([](SphereCoord a) {   return VReal(2,2,1e-5,0)(a); });
 
 
         //set up the basis functions. an index of [m+N][n] corresponds to negative values of m.
         for (int n = 0; n < N; n++)
             for (int m = 0; m <= n; m++)
             {
-                v[m][n] = V(m, n, GRADSTEP, 0.0);
-                v[m + N][n] = V(-m, n, GRADSTEP, 0.0);
-                w[m][n] = W(m, n, GRADSTEP, 0.0);
-                w[m + N][n] = W(-m, n, GRADSTEP, 0.0);
-                x[m][n] = X(m, n, GRADSTEP, 0.0);
-                x[m + N][n] = X(-m, n, GRADSTEP, 0.0);
+                vr[m][n] = VReal(m, n, GRADSTEP, 0.0);
+                vr[m + N][n] = VReal(-m, n, GRADSTEP, 0.0);
+                wr[m][n] = WReal(m, n, GRADSTEP, 0.0);
+                wr[m + N][n] = WReal(-m, n, GRADSTEP, 0.0);
+                xr[m][n] = XReal(m, n, GRADSTEP, 0.0);
+                xr[m + N][n] = XReal(-m, n, GRADSTEP, 0.0);
+
+                vi[m][n] = VImag(m, n, GRADSTEP, 0.0);
+                vi[m + N][n] = VImag(-m, n, GRADSTEP, 0.0);
+                wi[m][n] = WImag(m, n, GRADSTEP, 0.0);
+                wi[m + N][n] = WImag(-m, n, GRADSTEP, 0.0);
+                xi[m][n] = XImag(m, n, GRADSTEP, 0.0);
+                xi[m + N][n] = XImag(-m, n, GRADSTEP, 0.0);
             }
 
         //calculate the inner products;
 
         //for V
-        static std::complex<double> rhohatV[2 * N + 1][N];
+        static double rhohatVr[2 * N + 1][N];
+        static double rhohatVi[2 * N + 1][N];
         std::cout << "Computing inner product coefficiencts for V... " << std::endl;
         for (int n = 0; n < N; n++)
             for (int m = 0; m <= n; m++)
             {
 
 
-                rhohatV[m][n] = L2InnerProduct(&r, &v[m][n], NUMGRIDS);
+                rhohatVr[m][n] = L2InnerProduct(&r, &vr[m][n], NUMGRIDS);
 
-                rhohatV[m + N][n] = L2InnerProduct(&r, &v[m + N][n], NUMGRIDS);
+                rhohatVr[m + N][n] = L2InnerProduct(&r, &vr[m + N][n], NUMGRIDS);
+
+                rhohatVi[m][n] = L2InnerProduct(&r, &vi[m][n], NUMGRIDS);
+
+                rhohatVi[m + N][n] = L2InnerProduct(&r, &vi[m + N][n], NUMGRIDS);
+
                 //std::cout << "|";
-                std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatV[m][n] << " " << rhohatV[m + N][n] << std::endl;
+                std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatVr[m][n] << " " << rhohatVr[m + N][n] << std::endl
+                    << std::setw(22) << rhohatVi[m][n] << " " << rhohatVi[m + N][n] << "\n\n";
 
             }
         std::cout << "Done!" << std::endl;
 
         //for W.
-        static std::complex<double> rhohatW[2 * N + 1][N];
+        static double rhohatWr[2 * N + 1][N];
+        static double rhohatWi[2 * N + 1][N];
         std::cout << "Computing inner product coefficiencts for W... " << std::endl;
         for (int n = 0; n < N; n++)
             for (int m = 0; m <= n; m++)
             {
 
-                rhohatW[m][n] = L2InnerProduct(&r, &w[m][n], NUMGRIDS);
 
-                rhohatW[m + N][n] = L2InnerProduct(&r, &w[m + N][n], NUMGRIDS);
+                rhohatWr[m][n] = L2InnerProduct(&r, &wr[m][n], NUMGRIDS);
 
+                rhohatWr[m + N][n] = L2InnerProduct(&r, &wr[m + N][n], NUMGRIDS);
+
+                rhohatWi[m][n] = L2InnerProduct(&r, &wi[m][n], NUMGRIDS);
+
+                rhohatWi[m + N][n] = L2InnerProduct(&r, &wi[m + N][n], NUMGRIDS);
                 //std::cout << "|";
-                std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatW[m][n] << " " << rhohatW[m + N][n] << std::endl;
+                std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatWr[m][n] << " " << rhohatWr[m + N][n] << std::endl
+                    << std::setw(22) << rhohatWi[m][n] << " " << rhohatWi[m + N][n] << "\n\n";
 
             }
         std::cout << "Done!" << std::endl;
 
         //and for X.
-        static std::complex<double> rhohatX[2 * N + 1][N];
+        static double rhohatXr[2 * N + 1][N];
+        static double rhohatXi[2 * N + 1][N];
         std::cout << "Computing inner product coefficiencts for X... " << std::endl;
         for (int n = 0; n < N; n++)
             for (int m = 0; m <= n; m++)
             {
 
-                rhohatX[m][n] = L2InnerProduct(&r, &x[m][n], NUMGRIDS);
 
-                rhohatX[m + N][n] = L2InnerProduct(&r, &x[m + N][n], NUMGRIDS);
+                rhohatXr[m][n] = L2InnerProduct(&r, &xr[m][n], NUMGRIDS);
 
+                rhohatXr[m + N][n] = L2InnerProduct(&r, &xr[m + N][n], NUMGRIDS);
+
+                rhohatXi[m][n] = L2InnerProduct(&r, &xi[m][n], NUMGRIDS);
+
+                rhohatXi[m + N][n] = L2InnerProduct(&r, &xi[m + N][n], NUMGRIDS);
                 //std::cout << "|";
-                std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatX[m][n] << " " << rhohatX[m + N][n] << std::endl;
+                std::cout << "m = " << m << ", " << "n = " << n << "   " << rhohatXr[m][n] << " " << rhohatXr[m + N][n] << std::endl
+                    << std::setw(22) << rhohatXi[m][n] << " " << rhohatXi[m + N][n] << "\n\n";
 
             }
-        std::cout << "Done!" << std::endl << std::endl;
-
+        std::cout << "Done!" << std::endl;
         std::cout << "Gathering summation... ";
 
 
@@ -373,20 +501,20 @@ int main()
             for (int m = 0; m <= n; m++)
             {
 
-                Vterm[m][n] = SphericalHarmonic(rhohatV[m][n], v[m][n]);
+                Vterm[m][n] = SphericalHarmonic(rhohatVr[m][n] ,rhohatVi[m][n], vr[m][n] , vi[m][n]);
                 if (m > 0)
-                    Vterm[m + N][n] = SphericalHarmonic(rhohatV[m + N][n], v[m + N][n]);
+                    Vterm[m + N][n] = SphericalHarmonic(rhohatVr[m+N][n], rhohatVi[m+N][n], vr[m+N][n], vi[m+N][n]);
 
 
-                Wterm[m][n] = SphericalHarmonic(rhohatW[m][n], w[m][n]);
+                Wterm[m][n] = SphericalHarmonic(rhohatWr[m][n], rhohatWi[m][n], wr[m][n], wi[m][n]);
                 if (m > 0)
-                    Wterm[m + N][n] = SphericalHarmonic(rhohatW[m + N][n], w[m + N][n]);
+                    Wterm[m + N][n] = SphericalHarmonic(rhohatWr[m + N][n], rhohatWi[m + N][n], wr[m + N][n], wi[m + N][n]);
 
 
 
-                Xterm[m][n] = SphericalHarmonic(rhohatX[m][n], x[m][n]);
+                Xterm[m][n] = SphericalHarmonic(rhohatXr[m][n], rhohatXi[m][n], xr[m][n], xi[m][n]);
                 if (m > 0)
-                    Xterm[m + N][n] = SphericalHarmonic(rhohatX[m + N][n], x[m + N][n]);
+                    Xterm[m + N][n] = SphericalHarmonic(rhohatXr[m + N][n], rhohatXi[m + N][n], xr[m + N][n], xi[m + N][n]);
 
                 rhoapprox.append(Vterm[m][n]);
                 if (m > 0)
@@ -406,12 +534,15 @@ int main()
             }
         std::cout << "Done!" << std::endl << std::endl;
 
-
+        double abserr = L2Difference(&r, &rhoapprox, NUMGRIDS);
         //Compute the error in approximating rho by it's expansion in Spherical Harmonics.
-        std::cout << "Error in approximation(L2): ";
-        std::cout << L2Difference(&r, &rhoapprox, NUMGRIDS)<< std::endl;
+        std::cout << "Absolute Error in approximation(L2): ";
+        std::cout << abserr<< std::endl;
         std::cout << std::endl;
     
+        std::cout << "Relative Error in approximation(L2): ";
+        std::cout << abserr / sqrt(L2InnerProduct(&r , &r , NUMGRIDS)) << std::endl;
+        std::cout << std::endl;
            
 
     return 0;

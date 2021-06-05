@@ -92,10 +92,10 @@ public:
     {
         if (m >= 0)
             return values[m][i];
-        else if (m < 0)
+        else 
             return ((m % 2 == 0) ? 1.0 : -1.0) * (double)factorial(i + m) / (double)factorial(i - m) * values[-m][i];
 
-        else return -100;
+        
     }
 
 };
