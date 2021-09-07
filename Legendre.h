@@ -1,7 +1,8 @@
+#pragma once
 #include <vector>
 #include<cmath>
+#include<iostream>
 
-#pragma once
 int factorial(int n)
 {
     int ret = 1;
@@ -24,13 +25,13 @@ class Legendre
 
 private:
     //the value of the input variable to the function.
-    double input = 100;
+    inline static double input;
     //the maximum value of the parameter m computed for this value of the input.
-    int maxorder = 0;
+    inline static int maxorder;
     //the maximum value of the degree n computed for this value of the input.
-    int maxdegree = 0;
-    std::vector<std::vector<double>> values;
-    ;
+    inline static int maxdegree;
+    inline static std::vector<std::vector<double>> values;
+    
 
 public:
 
@@ -48,11 +49,15 @@ public:
     void populate(double val, int M, int L)
     {
 
+        if (abs(val - input) < 1e-16)
+            if (maxdegree < L)
+                if (maxorder < M)
+                    return;
 
         input = val;
         maxorder = abs(M);
         maxdegree = L;
-        double s = sqrt(1 - input * input) + 10e-12;
+        double s = sqrt(1 - input * input) + 1e-16;
 
         
 
@@ -98,22 +103,27 @@ public:
         
     }
 
+    double operator()(double x, int m, int l)
+    {
+        populate(x, m, l);
+        return getValue(m, l);
+    }
+
 };
 double testpoly(double x)
 {
-    double xsq = 1 - x * x;
-    xsq = pow(xsq, 2.5);
-    return -10395.0 *x * xsq;
+    double s = sqrt(1 - x * x);
+    return 1.0;
 }
 
 double testerr()
 {
-    int m = 5;
-    int l = 6;
+    int m = 0;
+    int l = 0;
 
     Legendre P;
     
-    double GLnodes[16] = { -0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274
+    double GLnodes[16] = { -0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274,
                           - 0.6178762444026438  , 0.6178762444026438 , -0.7554044083550030 , 0.7554044083550030 , -0.8656312023878318 , 0.8656312023878318  ,
                           -0.9445750230732326 , 0.9445750230732326  , -0.9894009349916499  , 0.9894009349916499 };
 
@@ -123,8 +133,8 @@ double testerr()
     double total = 0.0;
     for (int i = 0; i < 16; i++)
     {
-        P.populate(GLnodes[i], m, l);
-        double err = P.getValue(m, l) - testpoly(GLnodes[i]);
+        
+        double err = P(GLnodes[i],m, l) - testpoly(GLnodes[i]);
         total += GLweights[i] * err * err;
     }
 
