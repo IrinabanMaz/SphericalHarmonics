@@ -4,20 +4,19 @@
 #include <cmath>
 #include <complex>
 #include <vector>
+#include <memory>
 
-const double PI = 4 * atan(1);
+const double PI = 4.0 * atan(1);
 
-
-//structures for the different coordinate systems. Surface coordinates are for the unit sphere. Polar coordinates are actually Spherical Coordinates.
-//all coordinates are complex.
+//structures for the different coordinate systems. Surface coordinates are for the unit sphere.
 struct SurfaceCoord
 {
-public:
 
-    //zenith angle.
-    double phi = 0;
     //azimuthal angle.
     double theta = 0;
+    //zenith angle.
+    double phi = 0;
+    
 
     //addition for spherical coordinates.(note, addition here is essentially rotation).
     SurfaceCoord operator +(SurfaceCoord s2)
@@ -37,8 +36,11 @@ public:
     SurfaceCoord(double a, double b):
        theta(a),
         phi(b){}
+
+    
    
 };
+
 struct SphereCoord
 {
     double rho;
@@ -46,7 +48,7 @@ struct SphereCoord
 
     SphereCoord()
     {
-        rho = 1;
+        rho = 0;
     }
     SphereCoord(double r, SurfaceCoord s1)
     {
@@ -58,14 +60,13 @@ struct SphereCoord
         rho = 1;
         s = s1;
     }
-
-
-
-
-
-
-
 };
+
+std::ostream & operator <<(std::ostream &  o, SphereCoord s)
+{
+    o << "( " << s.rho << ", " << s.s.phi << ", " << s.s.theta <<")";
+    return o;
+}
 struct RectCoord
 {
     double x;
@@ -165,12 +166,7 @@ SphereCoord operator -(SphereCoord r, SphereCoord q)
 }
 SphereCoord operator *(double a, SphereCoord x)
 {
-    if (a >= 0)
-        return SphereCoord(a * x.rho, SurfaceCoord(x.s));
-    else if (x.s.phi < PI)
-        return SphereCoord(-a * x.rho, SurfaceCoord(x.s.theta, x.s.phi + PI));
-    else
-        return SphereCoord(-a * x.rho, SurfaceCoord(x.s.theta, x.s.phi - PI));
+    return RectToSphere(a * SphereToRect(x));
 }
 
 //Polar Coordinate dot product operator.
@@ -184,15 +180,52 @@ SphereCoord cross(SphereCoord x, SphereCoord y)
     return RectToSphere(cross(SphereToRect(x), SphereToRect(y)));
 }
 
-//returns the norm squared of the given polar coordinates.
+//returns the norm squared of the given spherical coordinates.
 double norm(SphereCoord x)
 {
     return x.rho;
 }
 
+
+SphereCoord e_r(SphereCoord x)
+{
+    return SphereCoord(1 , x.s);
+}
+
+SphereCoord e_phi(SphereCoord x)
+{
+    return RectToSphere(RectCoord(-sin(x.s.phi), cos(x.s.phi), 0));
+}
+
+SphereCoord e_theta(SphereCoord x)
+{
+    return RectToSphere(RectCoord(cos(x.s.theta) * cos(x.s.phi), cos(x.s.theta) * sin(x.s.phi), -sin(x.s.theta)));
+}
+
+template<class DOM , class RAN>
+class Functor
+{
+private:
+    RAN (*f)(DOM s);
+public:
+    Functor() : f(nullptr) {}
+    Functor(RAN (*f0)(DOM s)) : f(f0) {}
+    virtual RAN operator()(DOM s)
+    {
+        if (f != nullptr)
+            return (*f)(s);
+        else
+            return RAN();
+    }
+
+};
+
+
+
 //Encapulation of a Surface to scalar function. In all such encapsulations, to create a function, create a derived class and implement the function operator().
 //Then create a variable of the derived type and "call it". See code in main file for examples. In particular the rho function(immediately before main function)
 // is the most simple.
+/*
 class SurfaceScalarFunction
 {
 private:
@@ -209,7 +242,8 @@ public:
     }
 
 };
-
+*/
+typedef Functor<SurfaceCoord, double> SurfaceScalarFunction;
 //Computes the numerical gradient of a Surface to Scalar function using a symmetric difference with specified stepsize.
 //kappa exists to prevent division by zero and should be set small for accuracy.
 SphereCoord surfaceGrad(SurfaceScalarFunction* u, SurfaceCoord s, double stepsize)
@@ -249,116 +283,35 @@ SphereCoord surfaceGrad(SurfaceScalarFunction* u, SurfaceCoord s, double stepsiz
 }
 
 //Encapsulates a Spherical coordinate to Scalar function.
-class SphericalScalarFunction
-{
-private:
-    double (*f)(SphereCoord s);
-public:
-    SphericalScalarFunction() : f(nullptr) {}
-    SphericalScalarFunction(double (*f0)(SphereCoord s)) : f(f0) {}
-    virtual double operator()(SurfaceCoord s)
-    {
-        if (f != nullptr)
-            return (*f)(s);
-        else
-            return 0.0;
-    }
-
-};
-
+typedef Functor<SphereCoord, double> SphericalScalarFunction;
 
 //Encapsulates a Spherical coordinate to Spherical Coordinate function.
-class SphericalVectorField
-{
-private:
-    SphereCoord (*f)(SphereCoord s);
-public:
-    SphericalVectorField() : f(nullptr) {}
-    SphericalVectorField(SphereCoord (*f0)(SphereCoord s)) : f(f0) {}
-    virtual SphereCoord operator()(SphereCoord s)
-    {
-        if (f != nullptr)
-            return (*f)(s);
-        else
-            return s;
-    }
+typedef Functor<SphereCoord, SphereCoord> SphericalVectorField;
 
-};
-
-class SurfaceGrad : public SphericalVectorField
-{
-private:
-    SurfaceScalarFunction* arg;
-    double step;
-public:
-    SurfaceGrad(SurfaceScalarFunction* t , double st = 1e-5): arg(t) , step(st){}
-
-    SphereCoord operator()(SphereCoord r)
-    {
-        return surfaceGrad(arg, r.s, step);
-    }
-    
-};
-
-
-//Serves as a container allowing a Sum of vector fields to be called as a single function. to add a new function to the sum,
-// call the append function and pass an encapsulated function to it.
-class VectorFieldSum : public SphericalVectorField
+template<class DOM, class RAN>
+class FunctorSum: public Functor<DOM , RAN>
 {
 private:
 
     int numterms;
-    std::vector<SphericalVectorField* > fs;
+    std::vector<Functor<DOM , RAN >*> fs;
 public:
 
-    VectorFieldSum() { numterms = 0; }
-    VectorFieldSum(SphericalVectorField& f, SphericalVectorField& g)
+    FunctorSum()
     {
-        numterms = 2;
-        fs.push_back(&f);
-        fs.push_back(&g);
+        numterms = 0;
+        fs.clear();
     }
-
-    VectorFieldSum(VectorFieldSum f, SphericalVectorField& g)
-    {
-        numterms = f.numterms + 1;
-        fs = f.fs;
-        fs.push_back(&g);
-    }
-
-    VectorFieldSum(SphericalVectorField& f, VectorFieldSum g)
-    {
-        numterms = g.numterms + 1;
-        fs.resize(numterms);
-        fs.push_back(&f);
-        for (int i = 0; i < g.numterms; i++)
-            fs[i + 1] = g.fs[i];
-
-    }
-
-    VectorFieldSum(VectorFieldSum f, VectorFieldSum g)
-    {
-        numterms = g.numterms + f.numterms;
-
-        fs = f.fs;
-        fs.resize(numterms);
-
-        for (int i = 0; i < g.numterms; i++)
-            fs[i + f.numterms] = g.fs[i];
-
-
-    }
-
-    void append(SphericalVectorField& f)
+    void append(Functor<DOM , RAN>& f)
     {
         fs.push_back(&f);
         numterms++;
     }
 
 
-    SphereCoord operator()(SphereCoord x)
+    virtual RAN operator()(DOM x)
     {
-        SphereCoord temp = (0.0, SurfaceCoord(0.0, 0.0));
+        RAN temp;
         for (int i = 0; i < numterms; i++)
         {
             temp = temp + (*(fs[i]))(x);
@@ -366,8 +319,15 @@ public:
 
         return temp;
     }
-
 };
+
+typedef FunctorSum<SphereCoord, double>       SphereScalFunctionSum;
+
+typedef FunctorSum<SphereCoord, SphereCoord>  VectorFieldSum;
+
+//Serves as a container allowing a Sum of vector fields to be called as a single function. to add a new function to the sum,
+// call the append function and pass an encapsulated function to it.
+
 
 /*
 template<class T>
@@ -404,7 +364,7 @@ VFPLUS<T, V> operator +(T t, V v)
 double L2InnerProduct(SphericalVectorField* f1, SphericalVectorField* f2, int n)
 {
 
-    const double GLnodes[16] = { -0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274 
+    const double GLnodes[16] = { -0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274, 
                           - 0.6178762444026438  , 0.6178762444026438 , -0.7554044083550030 , 0.7554044083550030 , -0.8656312023878318 , 0.8656312023878318  ,
                           -0.9445750230732326 , 0.9445750230732326  , -0.9894009349916499  , 0.9894009349916499 };
 
@@ -413,10 +373,10 @@ double L2InnerProduct(SphericalVectorField* f1, SphericalVectorField* f2, int n)
                             0.0622535239386479  , 0.0622535239386479 , 0.0271524594117541  , 0.0271524594117541 };
     double total = 0;
 
-    for (double p = 0.0; p < 2 * PI; p += 2.0 * PI / n)
+    for (int p = 0; p < n; p++)
         for (int i = 0; i < 16; i++)
         {
-            SurfaceCoord s( PI / 2.0 * (GLnodes[i] + 1), p);
+            SurfaceCoord s( PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)n);
             SphereCoord x(s);
             total += sin(s.theta) * GLweights[i] * dot((*f1)(x), (*f2)(x)) *  (PI / n) * PI;
         }
@@ -427,10 +387,10 @@ double L2InnerProduct(SphericalVectorField* f1, SphericalVectorField* f2, int n)
 
 
 //computes the L2 difference of two vector fields on the Surface of a unit sphere using a trapezoidal rule in both coordinates.
-double L2Difference(SphericalVectorField* f1, SphericalVectorField* f2, int n)
+double L2Difference(SphericalVectorField* f1, SphericalVectorField* f2, int n , double radius = 1)
 {
-    const double GLnodes[16] = { -0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274
-                          - 0.6178762444026438  , 0.6178762444026438 , -0.7554044083550030 , 0.7554044083550030 , -0.8656312023878318 , 0.8656312023878318  ,
+    const double GLnodes[16] = { -0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274,
+                          -0.6178762444026438  , 0.6178762444026438 , -0.7554044083550030 , 0.7554044083550030 , -0.8656312023878318 , 0.8656312023878318  ,
                           -0.9445750230732326 , 0.9445750230732326  , -0.9894009349916499  , 0.9894009349916499 };
 
     const double GLweights[16] = { 0.1894506104550685 , 0.1894506104550685 , 0.1826034150449236  , 0.1826034150449236  , 0.1691565193950025  , 0.1691565193950025 ,
@@ -438,13 +398,13 @@ double L2Difference(SphericalVectorField* f1, SphericalVectorField* f2, int n)
                             0.0622535239386479  , 0.0622535239386479 , 0.0271524594117541  , 0.0271524594117541 };
     double total = 0;
 
-    for (double p = 0.0; p < 2 * PI; p += 2.0 * PI / n)
+    for (int p = 0; p < n; p++)
         for (int i = 0; i < 16; i++)
         {
-            SurfaceCoord s(PI  / 2.0 * (GLnodes[i] + 1), p);
-            SphereCoord x(s);
+            SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)n);
+            SphereCoord x(radius , s);
             SphereCoord diff = (*f1)(x) - (*f2)(x);
-            total += sin(s.theta) * GLweights[i] * dot(diff, diff) * (PI / n) * PI;
+            total += radius * radius * sin(s.theta) * GLweights[i] * dot(diff, diff) * (PI / n) * PI;
         }
 
     return sqrt(total);
