@@ -50,55 +50,52 @@ public:
     {
 
         if (abs(val - input) < 1e-16)
-            if (maxdegree < L)
-                if (maxorder < M)
+            if (maxdegree > L)
+                if (maxorder > L)
                     return;
 
         input = val;
-        maxorder = abs(M);
-        maxdegree = L;
+        maxorder = std::max(L, 2);
+        maxdegree = std::max(L , 2);
         double s = sqrt(1 - input * input) + 1e-16;
 
         
 
 
-        values.resize(abs(M) + 1);
+        values.resize(maxdegree + 1);
 
-        for (int m = 0; m < abs(M) + 1; m++)
-            values[m].resize(std::max(L + 1 , 2));
+        for (int l = 0; l <=maxdegree; l++)
+            values[l].resize(2*l + 1);
         
         //set values in case of boundary condition.
 
         //set initial values.
         values[0][0] = 1.0;
-        values[0][1] = input;
+        values[1][0] = input;
 
         //set values for m = 0 using recurrence in terms of two previous i values.
         for (int i = 1; i < L; i++)
-            values[0][i + 1] = ((2.0 * (double)i + 1) * input * values[0][i] - (double)i * values[0][i - 1]) / ((double)i + 1);
+            values[i + 1][0] = ((2.0 * (double)i + 1) * input * values[i][0] - (double)i * values[i - 1][0]) / ((double)i + 1);
 
 
         //computes values for larger values of m in terms of previous value of m. for i = 0, uses the values from i = 1, i = 2, instead.
-        for (int m = 0; m < abs(M); m++)
-        {
+        for (int i = 1; i <=L; i++)
+           for (int m = 0; m <i; m++)
+                values[i][m + 1] = ((((double)i - (double)m)) * input * values[i][m] - ((double)i + (double)m) * values[i - 1][m]) / s;
 
-            for (int i = 1; i < L + 1; i++)
-                values[m + 1][i] = ((((double)i - (double)m)) * input * values[m][i] - ((double)i + (double)m) * values[m][i - 1]) / s;
+            
 
-            values[m + 1][0] = ((-(double)m + 1.0) * values[m][1] + -((double)m + 1.0) * values[m][0]) / s;
-
-        }
-
-
+        
+        
     }
 
     //Accesses the value of the legendre functions for specified values of m,i.
     double getValue(int m, int i)
     {
         if (m >= 0)
-            return values[m][i];
+            return values[i][m];
         else 
-            return ((m % 2 == 0) ? 1.0 : -1.0) * (double)factorial(i + m) / (double)factorial(i - m) * values[-m][i];
+            return ((m % 2 == 0) ? 1.0 : -1.0) * (double)factorial(i + m) / (double)factorial(i - m) * values[i][-m];
 
         
     }
@@ -108,6 +105,45 @@ public:
         populate(x, m, l);
         return getValue(m, l);
     }
+
+    double dtheta(int m, int n, double theta, int order = 1)
+    {
+        populate(cos(theta), m + 1, n + 1);
+
+        double temp = 0.0;
+        if (order == 0)
+            return getValue(m, n);
+        else if(order == 1)
+        {
+            if (n == 0)
+                temp = 0;
+            else if (m >= 0)
+                temp = -(double)((n + m) * (n - m + 1)) * getValue(m - 1, n)
+                - (double)m * cos(theta) / sin(theta) * getValue(m, n);
+            else
+                temp = getValue(m + 1, n) + (double)m * cos(theta) / sin(theta) * getValue(m, n);
+
+
+            return temp;
+        }
+        else if (order == 2)
+        {
+            if (n == 0)
+                return 0;
+            else if (m >= 0)
+            {
+                return -(double)(n + m) * (n - m + 1) * dtheta(m - 1, n, theta, 1) + (double)m * cos(theta) / (sin(theta) * sin(theta)) * getValue(m, n)
+                    - (double)m * cos(theta) / sin(theta) * dtheta(m, n, theta, 1);
+            }
+            else
+            {
+                return -(double)(n + m) * (n - m + 1) * dtheta(m + 1, n, theta, 1) - (double)m * cos(theta) / (sin(theta) * sin(theta)) * getValue(m, n)
+                    + (double)m * cos(theta) / sin(theta) * dtheta(m, n, theta, 1);
+            }
+        }
+
+    }
+
 
 };
 double testpoly(double x)
