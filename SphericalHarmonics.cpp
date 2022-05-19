@@ -23,7 +23,7 @@ private:
     void generateCoefficients(bundle & coef , int N)
     {
         std::default_random_engine gen;
-        std::uniform_real_distribution r(0.0, 10.0);
+        std::uniform_real_distribution<double> r(0.0, 10.0);
 
         coef.resize(N + 1);
         for (int i = 0; i < N + 1; i++)
