@@ -1,6 +1,7 @@
 #pragma once
 #include "Matrix.h"
 #include "SphericalHarmonics.h"
+#include <cmath>
 
 
 double fV(double r, int n, double rhohatV, double rhohatW)
@@ -55,8 +56,13 @@ double g(double r, int n, double rhohatW)
 {
     double m = double(n);
 
+    if (isnan(rhohatW))
+        return 0.0;
+
     double temp = m / pow(r, n + 1);
     temp *= rhohatW;
+
+
 
     return temp;
 }
@@ -156,9 +162,9 @@ public:
 
     }
 
-    SphereCoord operator()(SphereCoord s)
+    RectCoord operator()(SphereCoord s)
     {
-        SphereCoord temp = fV(s.rho, n_, rhohatVr, rhohatWr) * vr(s) + fV(s.rho, n_, rhohatVi, rhohatWi) * vi(s);
+        RectCoord temp = fV(s.rho, n_, rhohatVr, rhohatWr) * vr(s) + fV(s.rho, n_, rhohatVi, rhohatWi) * vi(s);
         temp = temp + fW(s.rho, n_, rhohatWr) * wr(s) + fW(s.rho, n_, rhohatWi) * wi(s);
         temp = temp + fX(s.rho, n_, rhohatXr) * xr(s) + fX(s.rho, n_, rhohatXi) * xi(s);
 
@@ -273,6 +279,113 @@ public:
         return temp;
     }
 
+
+    void testhelper()
+    {
+        dot_ePhi dep(this);
+        dot_eTheta det(this);
+        dot_eR der(this);
+
+        NdPhi epdp(&dep);
+        NdPhi etdp(&det);
+        NdPhi erdp(&der);
+
+        NdTheta epdt(&dep);
+        NdTheta etdt(&det);
+        NdTheta erdt(&der);
+
+        NdR epdr(&dep);
+        NdR etdr(&det);
+        NdR erdr(&der);
+
+
+
+        double ephierr = 0.0;
+        double ethetaerr = 0.0;
+        double ererr = 0.0;
+        double ephidphierr = 0.0;
+        double ephidthetaerr = 0.0;
+        double ephidrerr = 0.0;
+        double erdphierr = 0.0;
+        double ethetadthetaerr = 0.0;
+        double ethetadphierr = 0.0;
+        double ethetadrerr = 0.0;
+        double erdthetaerr = 0.0;
+        double erdrerr = 0.0;
+
+
+        for (int p = 0; p < NUMTRAPNODES; p++)
+            for (int i = 0; i < NUMGLNODES; i++)
+            {
+                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+                SphereCoord x(1, s);
+
+                double diff = ePhi(x) - dep(x);
+                ephierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+
+                diff = eTheta(x) - det(x);
+                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+
+                diff = eR(x) - der(x);
+                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+
+                diff = ePhi_dPhi(x) - epdp(x);
+                ephidphierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+
+                diff = ePhi_dTheta(x) - epdt(x);
+                ephidthetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+
+                diff = ePhi_dR(x) - epdr(x);
+                ephidrerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+
+
+                diff = eTheta_dTheta(x) - etdt(x);
+                ethetadthetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+
+                diff = eTheta_dPhi(x) - etdp(x.s);
+                ethetadphierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+
+                diff = eTheta_dR(x) - etdr(x);
+                ethetadrerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+
+
+                diff = eR_dTheta(x) - erdt(x);
+                erdthetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+
+                diff = eR_dPhi(x) - erdp(x);
+                erdphierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+
+                diff = eR_dR(x) - erdr(x);
+                erdrerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+                /*if (dot(diff, diff) > 1e-12)
+                {
+                    std::cout << " error of " << dot(diff, diff) << " at " << x << std::endl;
+                    std::cout << "value of f: " << (*f1)(x) << std::endl;
+                    std::cout << "value of g: " << (*f2)(x) << std::endl;
+
+                }
+                */
+            }
+
+        std::cout << "Error in computing ephi: " << ephierr << "\n";
+        std::cout << "Error in computing etheta: " << ethetaerr << "\n";
+        std::cout << "Error in computing er: " << ererr << "\n";
+
+        std::cout << "Error in computing ephidphi: " << ephidphierr << "\n";
+        std::cout << "Error in computing ephidtheta: " << ephidthetaerr << "\n";
+        std::cout << "Error in computing ephidr: " << ephidrerr << "\n";
+
+        std::cout << "Error in computing ethetadtheta: " << ethetadthetaerr << "\n";
+        std::cout << "Error in computing ethetadphi: " << ethetadphierr << "\n";
+        std::cout << "Error in computing ethetadr: " << ethetadrerr << "\n";
+
+        std::cout << "Error in computing erdtheta: " << erdthetaerr << "\n";
+        std::cout << "Error in computing erdphi: " << erdphierr << "\n";
+        std::cout << "Error in computing erdr: " << erdrerr << "\n";
+
+    }
+
+
 };
 
 class SingleLayerHarmonic : public VectorFieldSum
@@ -280,58 +393,69 @@ class SingleLayerHarmonic : public VectorFieldSum
 private:
 
     Legendre P;
+    
     std::vector<std::vector<SingleLayerHarmonicTerm>> terms;
 
 public:
-    SingleLayerHarmonic(int n)
+    
+    RectCoord center;
+    SingleLayerHarmonic(int n , RectCoord c = RectCoord())
     {
+
+        center = c;
         terms.resize(n + 1);
 
         for (int i = 0; i < terms.size(); i++)
-            terms[i].resize(2 * i + 1);
+            terms[i].resize(i + 1);
     }
 
     SingleLayerHarmonic(VSHSeries& series)
     {
         terms.resize(series.N + 1);
         for (int i = 0; i <= series.N; i++)
-            terms[i].resize(2 * i + 1);
+            terms[i].resize( i + 1);
         for (int n = 0; n <= series.N; n++)
             for (int m = 0; m <= n; m++)
             {
                 terms[n][m] = SingleLayerHarmonicTerm(series, m, n);
-                append(terms[n][m]);
+                append(&terms[n][m]);
             }
 
+        center = series.center;
 
     }
 
     void solve(VSHSeries& series)
     {
+        terms.clear();
         terms.resize(series.N + 1);
         for (int i = 0; i <= series.N; i++)
-            terms[i].resize(2 * i + 1);
+            terms[i].resize(i + 1);
         for (int n = 0; n <= series.N; n++)
             for (int m = 0; m <= n; m++)
             {
                 terms[n][m] = SingleLayerHarmonicTerm(series, m, n);
-                append(terms[m][n]);
+                append(&terms[n][m]);
             }
+
+        center = series.center;
     }
 
-    void solve(SphericalVectorField rho, int N, int numgrids, double gradstep)
+    void solve(SphericalVectorField* rho, int N, int numgrids, double gradstep , RectCoord c = RectCoord())
     {
-        VSHSeries series(N, numgrids);
-        series.approximate(&rho);
+        VSHSeries series(N, numgrids , c);
+        series.approximate(rho);
 
         solve(series);
     }
 
-    SphereCoord operator()(SphereCoord s)
+    RectCoord operator()(SphereCoord s)
     {
-        int N = terms[0].size();
-        P.populate(cos(s.s.theta), N, N);
-        return VectorFieldSum::operator()(s);
+
+        SphereCoord temp = recenter(s, center);
+        int N = terms.size();
+        P.populate(cos(temp.s.theta), N, N);
+        return VectorFieldSum::operator()(temp);
 
     }
 
@@ -341,10 +465,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for(auto i : terms)
             for (auto j : i)
             {
-                temp += j.eR(s);
+                temp += j.eR(Temp);
             }
 
         return temp;
@@ -354,10 +480,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for (auto i : terms)
             for (auto j : i)
             {
-                temp += j.eTheta(s);
+                temp += j.eTheta(Temp);
             }
 
         return temp;
@@ -367,10 +495,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for (auto i : terms)
             for (auto j : i)
             {
-                temp += j.ePhi(s);
+                temp += j.ePhi(Temp);
             }
 
         return temp;
@@ -380,10 +510,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for (auto i : terms)
             for (auto j : i)
             {
-                temp += j.eR_dR(s);
+                temp += j.eR_dR(Temp);
             }
 
         return temp;
@@ -393,10 +525,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for (auto i : terms)
             for (auto j : i)
             {
-                temp += j.eTheta_dR(s);
+                temp += j.eTheta_dR(Temp);
             }
 
         return temp;
@@ -406,10 +540,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for (auto i : terms)
             for (auto j : i)
             {
-                temp += j.ePhi_dR(s);
+                temp += j.ePhi_dR(Temp);
             }
 
         return temp;
@@ -419,10 +555,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for (auto i : terms)
             for (auto j : i)
             {
-                temp += j.eR_dTheta(s);
+                temp += j.eR_dTheta(Temp);
             }
 
         return temp;
@@ -432,10 +570,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for (auto i : terms)
             for (auto j : i)
             {
-                temp += j.eTheta_dTheta(s);
+                temp += j.eTheta_dTheta(Temp);
             }
 
         return temp;
@@ -445,10 +585,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for (auto i : terms)
             for (auto j : i)
             {
-                temp += j.ePhi_dTheta(s);
+                temp += j.ePhi_dTheta(Temp);
             }
 
         return temp;
@@ -458,10 +600,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for (auto i : terms)
             for (auto j : i)
             {
-                temp += j.eR_dPhi(s);
+                temp += j.eR_dPhi(Temp);
             }
 
         return temp;
@@ -471,10 +615,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for (auto i : terms)
             for (auto j : i)
             {
-                temp += j.eTheta_dPhi(s);
+                temp += j.eTheta_dPhi(Temp);
             }
 
         return temp;
@@ -484,10 +630,12 @@ public:
     {
         double temp = 0.0;
 
+        SphereCoord Temp = recenter(s, center);
+
         for (auto i : terms)
             for (auto j : i)
             {
-                temp += j.ePhi_dPhi(s);
+                temp += j.ePhi_dPhi(Temp);
             }
 
         return temp;
@@ -528,8 +676,12 @@ public:
     {
         double temp = g(s.rho, n_, rhohatWr) * Yr(s.s) + g(s.rho, n_, rhohatWi) * Yi(s.s);
 
+        //std::cout << temp << "\n";
+
         return temp;
     }
+
+    
 
 };
 
@@ -541,56 +693,68 @@ private:
     std::vector<std::vector<StokesPressureTerm>> terms;
 
 public:
-    StokesPressure(int n)
+
+    RectCoord center;
+
+    StokesPressure(int n , RectCoord c = RectCoord())
     {
-        terms.resize(n);
+
+        center = c;
+        terms.resize(n+1);
 
         for (int i = 0; i < terms.size(); i++)
-            terms[i].resize(2 * i + 1);
+            terms[i].resize(i + 1);
     }
 
-    StokesPressure(VSHSeries& series)
+    StokesPressure(VSHSeries& series , std::string n = "")
     {
+        name = n;
+        center = series.center;
         terms.resize(series.N + 1);
         for (int i = 0; i <= series.N; i++)
-            terms[i].resize(2 * i + 1);
+            terms[i].resize(i + 1);
 
         for (int n = 0; n <= series.N; n++)
             for (int m = 0; m <= n; m++)
             {
                 terms[n][m] = StokesPressureTerm(series, m, n);
-                append(terms[n][m]);
+                append(&terms[n][m]);
             }
 
     }
 
     void solve(VSHSeries& series)
     {
+        terms.clear();
         terms.resize(series.N + 1);
         for (int i = 0; i <= series.N; i++)
-            terms[i].resize(2 * i + 1);
+            terms[i].resize(i + 1);
 
         for (int n = 0; n <= series.N; n++)
             for (int m = 0; m <= n; m++)
             {
                 terms[n][m] = StokesPressureTerm(series, m, n);
-                append(terms[n][m]);
+                append(&terms[n][m]);
             }
+
+        center = series.center;
     }
 
-    void solve(SphericalVectorField rho, int N, int numgrids)
+    void solve(SphericalVectorField* rho, int N, int numgrids , RectCoord center = RectCoord())
     {
-        VSHSeries series(N, numgrids);
-        series.approximate(&rho);
+        VSHSeries series(N, numgrids , center);
+        series.approximate(rho);
 
         solve(series);
     }
 
     double operator()(SphereCoord s)
     {
-        int N = terms[0].size();
-        P.populate(cos(s.s.theta), N, N);
-        return SphereScalFunctionSum::operator()(s);
+
+        SphereCoord temp = recenter(s, center);
+        int N = terms.size();
+        P.populate(cos(temp.s.theta), N, N);
+        return SphereScalFunctionSum::operator()(temp);
 
     }
 
@@ -604,28 +768,21 @@ vec<3> RecttoVec(RectCoord x)
     temp[2] = x.z;
     return temp;
 }
-vec<3> SpheretoVec(SphereCoord s)
+
+RectCoord VectoRect(vec<3> temp)
 {
-    RectCoord x(s);
-    return RecttoVec(x);
-
-}
-
-SphereCoord VectoSphere(vec<3> v)
-{
-    RectCoord temp;
-
-    temp.x = v[0];
-    temp.y = v[1];
-    temp.z = v[2];
-
-    return RectToSphere(temp);
+    RectCoord x;
+    x.x = temp[0];
+    x.y = temp[1];
+    x.z = temp[2];
+    return x;
 }
 class SingleLayerDirect : public SphericalVectorField
 {
 private:
 
     int n;
+    RectCoord center;
     SphericalVectorField* u;
 
    Matrix<3, 3> Kernel(SphereCoord x, SphereCoord y)
@@ -633,7 +790,7 @@ private:
        Matrix<3, 3> temp;
 
        //convert to the argument of the stokeslet.
-       vec<3> r = SpheretoVec(x - y);
+       vec<3> r = RecttoVec(x - y);
        double R = sqrt(dot(r,r));
 
        //iterate over entries over the tensor.
@@ -649,78 +806,38 @@ private:
    } 
 public:
 
-    SingleLayerDirect(SphericalVectorField *rho, int N) 
+    SingleLayerDirect(SphericalVectorField *rho, int N, RectCoord c = RectCoord(), std::string na = "Direct Single Layer")
     {
         n = N;
         u = rho;
+        name = na;
+        center = c;
     }
 
 
-    SphereCoord operator()(SphereCoord x)
+    RectCoord operator()(SphereCoord x)
     {
-        /*const double GLnodes[16] = {-0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274,
-                         -0.6178762444026438  , 0.6178762444026438 , -0.7554044083550030 , 0.7554044083550030 , -0.8656312023878318 , 0.8656312023878318  ,
-                         -0.9445750230732326 , 0.9445750230732326  , -0.9894009349916499  , 0.9894009349916499 };
 
-   */
-        //Gauss Legendre nodes
-        const double GLnodes[32] = { -0.0483076656877383, 0.0483076656877383,
-                                     -0.1444719615827965, 0.1444719615827965,
-                                     -0.2392873622521371, 0.2392873622521371,
-                                     -0.3318686022821277, 0.3318686022821277,
-                                     -0.4213512761306353, 0.4213512761306353,
-                                     -0.5068999089322294, 0.5068999089322294,
-                                     -0.5877157572407623, 0.5877157572407623,
-                                     -0.6630442669302152, 0.6630442669302152,
-                                     -0.7321821187402897, 0.7321821187402897,
-                                     -0.7944837959679424, 0.7944837959679424,
-                                     -0.8493676137325700, 0.8493676137325700,
-                                     -0.8963211557660521, 0.8963211557660521,
-                                     -0.9349060759377397, 0.9349060759377397,
-                                     -0.9647622555875064, 0.9647622555875064,
-                                     -0.9856115115452684, 0.9856115115452684,
-                                     -0.9972638618494816, 0.9972638618494816 };
+        
 
-        /*
-        const double GLweights[16] = { 0.1894506104550685 , 0.1894506104550685 , 0.1826034150449236  , 0.1826034150449236  , 0.1691565193950025  , 0.1691565193950025 ,
-                                0.1495959888165767  , 0.1495959888165767 , 0.1246289712555339  , 0.1246289712555339  , 0.0951585116824928  , 0.0951585116824928 ,
-                                0.0622535239386479  , 0.0622535239386479 , 0.0271524594117541  , 0.0271524594117541 };
-        */
-
-        //Gauss Legendre weights
-        const double GLweights[32] = { 0.0965400885147278 , 0.0965400885147278,
-                                       0.0956387200792749 , 0.0956387200792749,
-                                       0.0938443990808046 , 0.0938443990808046,
-                                       0.0911738786957639 , 0.0911738786957639,
-                                       0.0876520930044038 , 0.0876520930044038,
-                                       0.0833119242269467 , 0.0833119242269467,
-                                       0.0781938957870703 , 0.0781938957870703,
-                                       0.0723457941088485 , 0.0723457941088485,
-                                       0.0658222227763618 , 0.0658222227763618,
-                                       0.0586840934785355 , 0.0586840934785355,
-                                       0.0509980592623762 , 0.0509980592623762,
-                                       0.0428358980222267 , 0.0428358980222267,
-                                       0.0342738629130214 , 0.0342738629130214,
-                                       0.0253920653092621 , 0.0253920653092621,
-                                       0.0162743947309057 , 0.0162743947309057,
-                                       0.0070186100094701 , 0.0070186100094701 };
-
-        vec<3> total;
+        vec<3> total = 0.0;
         //loop over trapezoidal(outside) and legendre(inside) nodes.
         for (int p = 0; p < n; p++)
-            for (int i = 0; i < 32; i++)
+            for (int i = 0; i < NUMGLNODES; i++)
             {
                 //generate point on unit sphere, note theta is the first argument, phi the second.
                 SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1) , 2.0 * PI * (double)p / (double)n);
                 //convert to spherical coordinate.
-                SphereCoord y(s);
+                SphereCoord y(s , center);
                 //add contribution at y to integral.
-                total = total +  dot(Kernel(x , y), SpheretoVec((*u)(y))) *sin(s.theta) * GLweights[i] * (PI / n) * PI;
+                total = total +  dot(Kernel(x , y), RecttoVec((*u)(y))) *sin(s.theta) * GLweights[i] * (PI / n) * PI;
             }
 
-        return VectoSphere(total);
+        return VectoRect(total);
     }
 };
+
+
 
 class StokesTractionDirect : public SphericalVectorField
 {
@@ -728,98 +845,63 @@ private:
 
     int N;
     SphericalVectorField* u;
+    RectCoord center;
 
     Matrix<3, 3> Kernel(SphereCoord x, SphereCoord y)
     {
         Matrix<3, 3> temp;
 
+
         //convert to the argument of the stokeslet.
-        vec<3> r = SpheretoVec(x - y);
+        vec<3> r = RecttoVec(x - y);
         double R = sqrt(dot(r, r));
-        double rn = dot(r,SpheretoVec(e_r(x)));
+        double rn = dot(r,RecttoVec(e_r(x)));
         //iterate over entries over the tensor.
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 3; j++)
             {
                 //formula for the i,jth entry of the stokeslet
                 temp[i][j] = r[i] * r[j] * rn / pow(R , 5);
-                temp[i][j] *= -0.75 / PI;
+                temp[i][j] *= - 0.75 / PI;
             }
 
         return temp;
     }
 public:
 
-    StokesTractionDirect(SphericalVectorField* rho, int Nn)
+    StokesTractionDirect(SphericalVectorField* rho, int Nn, RectCoord c = RectCoord(), std::string na = "Traction Direct")
     {
         N = Nn;
         u = rho;
+        name = na;
+        center = c;
     }
 
 
-    SphereCoord operator()(SphereCoord x)
+    RectCoord operator()(SphereCoord x)
     {
-        /*const double GLnodes[16] = {-0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274,
-                         -0.6178762444026438  , 0.6178762444026438 , -0.7554044083550030 , 0.7554044083550030 , -0.8656312023878318 , 0.8656312023878318  ,
-                         -0.9445750230732326 , 0.9445750230732326  , -0.9894009349916499  , 0.9894009349916499 };
 
-   */
-   //Gauss Legendre nodes
-        const double GLnodes[32] = { -0.0483076656877383, 0.0483076656877383,
-                                     -0.1444719615827965, 0.1444719615827965,
-                                     -0.2392873622521371, 0.2392873622521371,
-                                     -0.3318686022821277, 0.3318686022821277,
-                                     -0.4213512761306353, 0.4213512761306353,
-                                     -0.5068999089322294, 0.5068999089322294,
-                                     -0.5877157572407623, 0.5877157572407623,
-                                     -0.6630442669302152, 0.6630442669302152,
-                                     -0.7321821187402897, 0.7321821187402897,
-                                     -0.7944837959679424, 0.7944837959679424,
-                                     -0.8493676137325700, 0.8493676137325700,
-                                     -0.8963211557660521, 0.8963211557660521,
-                                     -0.9349060759377397, 0.9349060759377397,
-                                     -0.9647622555875064, 0.9647622555875064,
-                                     -0.9856115115452684, 0.9856115115452684,
-                                     -0.9972638618494816, 0.9972638618494816 };
 
-        /*
-        const double GLweights[16] = { 0.1894506104550685 , 0.1894506104550685 , 0.1826034150449236  , 0.1826034150449236  , 0.1691565193950025  , 0.1691565193950025 ,
-                                0.1495959888165767  , 0.1495959888165767 , 0.1246289712555339  , 0.1246289712555339  , 0.0951585116824928  , 0.0951585116824928 ,
-                                0.0622535239386479  , 0.0622535239386479 , 0.0271524594117541  , 0.0271524594117541 };
-        */
 
-        //Gauss Legendre weights
-        const double GLweights[32] = { 0.0965400885147278 , 0.0965400885147278,
-                                       0.0956387200792749 , 0.0956387200792749,
-                                       0.0938443990808046 , 0.0938443990808046,
-                                       0.0911738786957639 , 0.0911738786957639,
-                                       0.0876520930044038 , 0.0876520930044038,
-                                       0.0833119242269467 , 0.0833119242269467,
-                                       0.0781938957870703 , 0.0781938957870703,
-                                       0.0723457941088485 , 0.0723457941088485,
-                                       0.0658222227763618 , 0.0658222227763618,
-                                       0.0586840934785355 , 0.0586840934785355,
-                                       0.0509980592623762 , 0.0509980592623762,
-                                       0.0428358980222267 , 0.0428358980222267,
-                                       0.0342738629130214 , 0.0342738629130214,
-                                       0.0253920653092621 , 0.0253920653092621,
-                                       0.0162743947309057 , 0.0162743947309057,
-                                       0.0070186100094701 , 0.0070186100094701 };
-
-        vec<3> total;
+        vec<3> total = 0.0;
         //loop over trapezoidal(outside) and legendre(inside) nodes.
         for (int p = 0; p < N; p++)
-            for (int i = 0; i < 32; i++)
+            for (int i = 0; i < NUMGLNODES; i++)
             {
                 //generate point on unit sphere, note theta is the first argument, phi the second.
                 SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)N);
                 //convert to spherical coordinate.
-                SphereCoord y(s);
+                SphereCoord y(s , center);
                 //add contribution at y to integral.
-                total = total + dot(Kernel(x, y), SpheretoVec((*u)(y))) * sin(s.theta) * GLweights[i] * (PI / N) * PI;
+                total = total + dot(Kernel(x, y), RecttoVec((*u)(y))) * sin(s.theta) * GLweights[i] * (PI / N) * PI;
+                if (isnan(total[0]) || isnan(total[1]) || isnan(total[2]))
+                {
+                    std::cout << "nan detected from function " << u->name << " at " << y <<"\n";
+                    std::cout << u->name << "(y) = " << ((*u)(y)) << "\n";
+                }
             }
 
-        return VectoSphere(total);
+        return VectoRect(total);
     }
 };
 
@@ -829,30 +911,44 @@ class StokesTractionHarmonic : public SphericalVectorField
 private:
     SingleLayerHarmonic* slh;
     StokesPressure* sp;
-    Matrix<3, 3> kernel;
 
 
 public:
 
-    StokesTractionHarmonic(SingleLayerHarmonic* u, StokesPressure* p)
+    StokesTractionHarmonic(SingleLayerHarmonic* u, StokesPressure* p ,std::string na = "Traction Harmonic")
     {
         slh = u;
         sp = p;
+        name = na;
     }
 
-    SphereCoord operator()(SphereCoord s)
+    RectCoord operator()(SphereCoord s)
     {
-        kernel[0][0] = slh->eR_dR(s) - sp->operator()(s);
-        kernel[1][0] = kernel[0][1] = (s.rho * slh->eTheta_dR(s) - slh->eTheta(s)) / (2.0 * s.rho) + slh->eR_dTheta(s) / (2.0 * s.rho);
-        kernel[2][0] = kernel[0][2] = slh->eR_dPhi(s) / (2.0 * s.rho * sin(s.s.theta)) + (s.rho * slh->ePhi_dR(s) - slh->ePhi(s)) / (2.0 * s.rho);
-        kernel[1][1] = slh->eTheta_dTheta(s) / s.rho + slh->eR(s) / s.rho - sp->operator()(s);
-        kernel[2][1] = kernel[1][2] = (sin(s.s.theta) * slh->ePhi_dTheta(s) - cos(s.s.theta) * slh->ePhi(s)) / (2.0 * s.rho * sin(s.s.theta)) + slh->eTheta_dPhi(s) / (2.0 * s.rho * sin(s.s.theta));
-        kernel[2][2] = slh->ePhi_dPhi(s) / (s.rho * sin(s.s.theta)) + slh->eR(s) / s.rho + slh->eTheta(s) * cos(s.s.theta) / (s.rho * sin(s.s.theta)) - sp->operator()(s);
+        
+        SphereCoord temp = recenter(s , slh->center);
 
-        vec<3> normal = SpheretoVec(e_r(s));
+       
+        double tr = 2.0 * slh->eR_dR(s) -(*sp)(s);
+        double ttheta = slh->eTheta_dR(s) + slh->eR_dTheta(s) / temp.rho - slh->eTheta(s) / temp.rho;
+        double tphi = slh->ePhi_dR(s) + slh->eR_dPhi(s) / (temp.rho * sin(temp.s.theta)) - slh->ePhi(s) / temp.rho;
 
-        return VectoSphere(dot(kernel, normal));
+        return tr * e_r(s) + ttheta * e_theta(s) + tphi * e_phi(s);
 
     }
 
+};
+
+class StokesPressurefromTraction : public SphericalScalarFunction
+{
+private:
+    SingleLayerHarmonic* slh;
+    StokesTractionDirect* t;
+
+public:
+    StokesPressurefromTraction(SingleLayerHarmonic* slh0 , StokesTractionDirect* t0): slh(slh0) , t(t0){}
+
+    double operator()(SphereCoord x)
+    {
+        return 2.0 * slh->eR_dR(x) - dot((*t)(x) , e_r(x));
+    }
 };

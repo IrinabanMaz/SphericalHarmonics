@@ -57,7 +57,7 @@ public:
         input = val;
         maxorder = std::max(L, 2);
         maxdegree = std::max(L , 2);
-        double s = sqrt(1 - input * input) + 1e-16;
+        double s = sqrt(1 - input * input);
 
         
 
@@ -108,7 +108,7 @@ public:
 
     double dtheta(int m, int n, double theta, int order = 1)
     {
-        populate(cos(theta), m + 1, n + 1);
+        populate(cos(theta), m +1, n+1 );
 
         double temp = 0.0;
         if (order == 0)
@@ -132,7 +132,7 @@ public:
                 return 0;
             else if (m >= 0)
             {
-                return -(double)(n + m) * (n - m + 1) * dtheta(m - 1, n, theta, 1) + (double)m * cos(theta) / (sin(theta) * sin(theta)) * getValue(m, n)
+                return -(double)((n + m) * (n - m + 1)) * dtheta(m - 1, n, theta, 1)+ (double)m/ (sin(theta) * sin(theta)) * getValue(m, n)
                     - (double)m * cos(theta) / sin(theta) * dtheta(m, n, theta, 1);
             }
             else
