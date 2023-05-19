@@ -1,37 +1,94 @@
+/**
+* @file Legendre.h
+* 
+* Contains the class definition for the Associated Legendre Functions.
+* We compute the values of the funtions and their derivatives by recurrance relations.
+* Once computed at a point, the values of the functions are stored for all indices until the point is changed.
+* 
+*/
+
+
+
 #pragma once
 #include <vector>
 #include<cmath>
 #include<iostream>
+#include<map>
 
-int factorial(int n)
+
+
+/**
+*
+* @brief computes the factorial of the argument.
+*/
+double factorial(int n)
 {
-    int ret = 1;
+    static int maxn = 0;
+    static std::vector<double> vals;
+    static bool firstcall = true;
+
+    if (firstcall)
+    {
+        vals.resize(1);
+        vals[0] = 1;
+        firstcall = false;
+    }
     if (n < 0)
     {
         std::cout << "Error: negative integer passed to factorial";
         return -1;
     }
-    else for (int i = 2; i <= n; i++)
-        ret *= i;
+    else if (n <= maxn)
+        return vals[n];
+    else
+    {
+        vals.resize(n + 1);
+        for (int i = maxn + 1; i <= n; i++)
+            vals[i] = vals[i - 1] * i;
 
-    return ret;
+        maxn = n;
+        return vals[n];
+    }
 }
 
-//Class which computes the value of the Associated Legendre Functions using recurrence relations. The class stores all intermediate values (over m,n)for a fixed input
-// for potential later use.
+/**
+* @brief comparison operator for maps with double. Returns true if a < b within relative accuracy of template parameter.
+*/
+template<double eps>
+struct LessWithTol
+{
+    bool operator()(const double& a, const double& b) const
+    {
+        
+            return a  < b - eps * abs(a);
+    }
+};
+
+inline bool EqualsWithTol(const double& a, const double& b)
+{
+    LessWithTol<1e-14> lwt;
+
+    return !lwt(a, b) && !lwt(b, a);
+}
+
+typedef std::map<double, std::vector<std::vector<double>>, LessWithTol<1e-14>> PrecomputedVals;
+
+/**
+*  @brief Class representing the Associated Legendre Functions.
+*/
 class Legendre
 {
 
 
 private:
     //the value of the input variable to the function.
-    inline static double input;
+    double input; /**< Value of the last argument passed to the function. */
     //the maximum value of the parameter m computed for this value of the input.
-    inline static int maxorder;
+    int maxorder; /**< Value of the highest order computed for the value above. */
     //the maximum value of the degree n computed for this value of the input.
-    inline static int maxdegree;
-    inline static std::vector<std::vector<double>> values;
-    
+    int maxdegree; /**< Value of the highest degree computed for the value above. */
+    std::vector<std::vector<double>> values; /**< Values of the Legendre Functions for the value input. */
+    //PrecomputedVals prevals;
 
 public:
 
@@ -42,17 +99,34 @@ public:
         maxdegree = -1;
     }
 
-    ///Populate the values of the legendre polynomials at the gicen point values.
-    ///-double val: The point we are evaluating at.
-    ///-int M: the maximum order of the legendre polynomials
-    ///int L: the maximum degree of the polynomials.
+    /** 
+       \fn void populate(double val , int M, int L)
+       \brief Computes the valeus of the Legendre Functions at the value val.
+
+       The function computes the Legendre functions using the following recurrence relations.
+       \f{eqnarray}{
+        P_0^0(x) &=& 1 \\
+        P_1^0(x) &=& x \\
+        P_{n+1}^0(x) &=&  \frac{2 n + 1}{n+1} x P_n^0(x) -  \frac{n}{n+1} P_{n-1}^0(x) \\
+        P_n^{m+1}(x) &=& (n-m) \frac{x}{1-x^2} P_n^m(x) - (n+m)\frac{1}{1-x^2}P_{n-1}^m(x) 
+       \f}
+    */
     void populate(double val, int M, int L)
     {
-
         if (abs(val - input) < 1e-16)
             if (maxdegree > L)
                 if (maxorder > L)
                     return;
+/*
+        if(prevals.count(val) > 0)
+            if (maxdegree > L)
+                if (maxorder > L)
+                {
+                    input = val;
+                    values = prevals[input];
+                    return;
+                }
+  */      
 
         input = val;
         maxorder = std::max(L, 2);
@@ -62,10 +136,13 @@ public:
         
 
 
-        values.resize(maxdegree + 1);
+        if (values.size() <= maxdegree) {
+            values.resize(maxdegree + 1);
+            for (int l = 0; l <= maxdegree; l++)
+                if (values[l].size() <= l)
+                    values[l].resize(l + 1);
+        }
 
-        for (int l = 0; l <=maxdegree; l++)
-            values[l].resize(2*l + 1);
         
         //set values in case of boundary condition.
 
@@ -74,24 +151,35 @@ public:
         values[1][0] = input;
 
         //set values for m = 0 using recurrence in terms of two previous i values.
-        for (int i = 1; i < L; i++)
+        for (int i = 1; i < maxdegree; i++)
             values[i + 1][0] = ((2.0 * (double)i + 1) * input * values[i][0] - (double)i * values[i - 1][0]) / ((double)i + 1);
 
 
         //computes values for larger values of m in terms of previous value of m. for i = 0, uses the values from i = 1, i = 2, instead.
-        for (int i = 1; i <=L; i++)
+        for (int i = 1; i <=maxdegree; i++)
            for (int m = 0; m <i; m++)
                 values[i][m + 1] = ((((double)i - (double)m)) * input * values[i][m] - ((double)i + (double)m) * values[i - 1][m]) / s;
 
             
-
+      //  prevals[val] = values;
         
         
     }
 
-    //Accesses the value of the legendre functions for specified values of m,i.
-    double getValue(int m, int i)
-    {
+private:
+    /** 
+    \fn double getValue(int m, int i)
+    \brief Retrieves the values computed by populate at the given indices,
+    */
+    double getValue(double x, int m, int i)
+    {/*
+        std::vector<std::vector<double>>* vals;
+        
+        if (EqualsWithTol(x , input))
+            vals = &values;
+        else
+            vals = &prevals[x];
+            */
         if (m >= 0)
             return values[i][m];
         else 
@@ -99,29 +187,49 @@ public:
 
         
     }
+public:
 
+    /**
+    \fn double operator()(double x, int m, int l)
+
+     Performs populate(double val, int M, int L) and getValue(int m, int i) in order for the arguments.
+    */
     double operator()(double x, int m, int l)
     {
+        
         populate(x, m, l);
-        return getValue(m, l);
+
+        return getValue(x , m, l);
     }
 
-    double dtheta(int m, int n, double theta, int order = 1)
+    /**
+    \fn double dTheta(int m, int n, double theta, int order = 1)
+    \brief Computes the first or second derivative with respect to \f$ \theta \f$ of the Legendre Function at the value \f$ \cos(\theta) \f$.
+    
+    For the first derivative, we use the recurrence relations
+    \f{eqnarray}{
+    \frac{dP_n^m(x)}{dx} &=& -(n + m)(n - m + 1))P_n^{m-1}(x)
+            -m \frac{x}{\sqrt{1-x^2}}P_n^m(x)\\
+    \frac{dP_n^m(x)}{dx} &=&   P_n^{m+1}(x) + m  \frac{x}{1-x^2}  P_n^m(x)
+    \f}
+    */
+    double dTheta(int m, int n, double theta, int order = 1)
     {
-        populate(cos(theta), m +1, n+1 );
+        double x = cos(theta);
+        populate(x, m +1, n+1 );
 
         double temp = 0.0;
         if (order == 0)
-            return getValue(m, n);
+            return getValue(x , m, n);
         else if(order == 1)
         {
             if (n == 0)
                 temp = 0;
-            else if (m >= 0)
-                temp = -(double)((n + m) * (n - m + 1)) * getValue(m - 1, n)
-                - (double)m * cos(theta) / sin(theta) * getValue(m, n);
+            else if (m >= 1)
+                temp = -(double)((n + m) * (n - m + 1)) * getValue(x ,m - 1, n)
+                - (double)m * x / sin(theta) * getValue(x , m, n);
             else
-                temp = getValue(m + 1, n) + (double)m * cos(theta) / sin(theta) * getValue(m, n);
+                temp = getValue(x , m + 1, n) + m * x / sin(theta) * getValue(x , m, n);
 
 
             return temp;
@@ -132,18 +240,20 @@ public:
                 return 0;
             else if (m >= 0)
             {
-                return -(double)((n + m) * (n - m + 1)) * dtheta(m - 1, n, theta, 1)+ (double)m/ (sin(theta) * sin(theta)) * getValue(m, n)
-                    - (double)m * cos(theta) / sin(theta) * dtheta(m, n, theta, 1);
+                double y = sin(theta);
+                return -(double)((n + m) * (n - m + 1)) * dTheta(m - 1, n, theta, 1)+ (double)m/ (y * y) * getValue(x ,m, n)
+                    - (double)m * x / y * dTheta(m, n, theta, 1);
             }
             else
             {
-                return -(double)(n + m) * (n - m + 1) * dtheta(m + 1, n, theta, 1) - (double)m * cos(theta) / (sin(theta) * sin(theta)) * getValue(m, n)
-                    + (double)m * cos(theta) / sin(theta) * dtheta(m, n, theta, 1);
+                double y = sin(theta);
+                return -(double)(n + m) * (n - m + 1) * dTheta(m + 1, n, theta, 1) - (double)m * x / (y * y) * getValue(x ,m, n)
+                    + (double)m * x / y * dTheta(m, n, theta, 1);
             }
         }
-
+     return 0.0;
     }
-
+    
 
 };
 double testpoly(double x)

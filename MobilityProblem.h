@@ -1,8 +1,8 @@
 #pragma once
 #include "SingleParticleMobility.h"
+#include <ctime>
 
-
-class ParticleSystem : public VectorFieldSum
+class ParticleSystem : public SphericalVectorField
 {
 public:
 
@@ -12,29 +12,29 @@ public:
 	ParticleSystem(std::vector<RectCoord> cs = std::vector<RectCoord>(), int n = 0) 
 	{
 		particles.resize(cs.size());
-		for (int i = 0; i < particles.size(); i++)
+		for (size_t i = 0; i < particles.size(); i++)
 		{
 			particles[i] = SingleParticle(cs[i], n);
 
-			append(&particles[i].flow);
 			traction.append(&particles[i].traction);
 		}
 	}
 
-	ParticleSystem(std::vector<SphereData> ds, std::vector<RectCoord> cs, int nst, int nn)
+	ParticleSystem(std::vector<SphereData> ds, std::vector<RectCoord> cs, int nst)
 	{
 
 		if (ds.size() != cs.size())
 			std::cout << "Error: Data size and centers size in paticle system are not equal.\n";
 
 		particles.resize(cs.size());
-		for (int i = 0; i < particles.size(); i++)
+		for (size_t i = 0; i < particles.size(); i++)
 		{
-			particles[i] = SingleParticle(ds[i], cs[i], nst, nn);
+			particles[i] = SingleParticle(ds[i], cs[i], nst);
 
-			append(&particles[i].flow);
 			traction.append(&particles[i].traction);
 		}
+
+	
 	}
 
 
@@ -42,28 +42,43 @@ public:
 	{
 		particles = ps.particles;
 
-		for (SingleParticle p : particles)
+		traction.clear();
+
+		for (int i = 0; i < particles.size(); i++)
 		{
-			append(&p.flow);
-			traction.append(&p.traction);
+			traction.append(&particles[i].traction);
+		}
+	}
+
+	ParticleSystem(ParticleSystem&& ps) noexcept
+	{
+		particles = std::move(ps.particles);
+
+		traction.clear();
+
+		for (int i = 0; i < particles.size(); i++)
+		{
+			traction.append(&particles[i].traction);
 		}
 	}
 
 	ParticleSystem(const int& n)
 	{
 		particles.resize(n);
-		for (SingleParticle p : particles)
+		for (int i = 0; i < particles.size(); i++)
 		{
-			append(&p.flow);
-			traction.append(&p.traction);
+			traction.append(&particles[i].traction);
 		}
 	}
 
-	void push_back(SingleParticle p)
+	void push_back(const SingleParticle & p)
 	{
 		particles.push_back(p);
-		append(&particles.back().flow);
-		traction.append(&particles.back().traction);
+		traction.clear();
+		for (int i = 0; i < particles.size(); i++)
+		{
+			traction.append(&particles[i].traction);
+		}
 	}
 
 	ParticleSystem operator +(const ParticleSystem& ps)
@@ -73,8 +88,8 @@ public:
 		if (particles.size() != ps.particles.size())
 			std::cout << "Error:Summing different numbers of particles.\n";
 
-		for (int i = 0; i < particles.size(); i++)
-			temp.particles[i] = particles[i] + ps.particles[i];
+		for (size_t i = 0; i < particles.size(); i++)
+			temp.particles[i] = std::move(particles[i] + ps.particles[i]);
 
 		return temp;
 
@@ -87,22 +102,34 @@ public:
 		if (particles.size() != ps.particles.size())
 			std::cout << "Error:Summing different numbers of particles.\n";
 
-		for (int i = 0; i < particles.size(); i++)
-			temp.particles[i] = particles[i] - ps.particles[i];
+		for (size_t i = 0; i < particles.size(); i++)
+			temp.particles[i] = std::move(particles[i] - ps.particles[i]);
 
 		return temp;
 
 	}
 
-	ParticleSystem operator +=(const ParticleSystem& ps)
+	ParticleSystem operator -() const
 	{
-		*this = *this + ps;
+		ParticleSystem temp(*this);
+
+
+		for (size_t i = 0; i < particles.size(); i++)
+			temp.particles[i] = std::move(-particles[i]);
+
+		return temp;
+
+	}
+
+	ParticleSystem & operator +=(const ParticleSystem& ps)
+	{
+		*this = std::move(*this + ps);
 		return *this;
 	}
 
-	ParticleSystem operator *=(const double& a)
+	ParticleSystem & operator *=(const double& a)
 	{
-		*this = (*this) * a;
+		*this = std::move((*this) * a);
 		return *this;
 	}
 
@@ -111,21 +138,49 @@ public:
 		ParticleSystem temp(*this);
 
 
-		for (int i = 0; i < particles.size(); i++)
-			temp.particles[i] = particles[i] *a;
+		for (size_t i = 0; i < particles.size(); i++)
+			temp.particles[i] *=a ;
 
 		return temp;
 
 	}
 
-	ParticleSystem operator =(const ParticleSystem& ps)
+	ParticleSystem& operator =(const ParticleSystem& ps)
 	{
-		this->particles = ps.particles;
+		particles = ps.particles;
 
-		for (SingleParticle p : particles)
+		traction.clear();
+
+		for (int i = 0; i < particles.size(); i++)
 		{
-			append(&p.flow);
-			traction.append(&p.traction);
+				traction.append(&particles[i].traction);
+		}
+
+		return *this;
+
+	}
+
+	ParticleSystem upsize(const int& N)
+	{
+		ParticleSystem temp;
+
+		for (auto p : particles)
+		{
+			temp.push_back(SingleParticle(p.data, p.center, max(N, p.numSeriesTerms)));
+		}
+
+		return temp;
+	}
+
+	ParticleSystem& operator =(ParticleSystem&& ps) noexcept
+	{
+		particles = std::move(ps.particles);
+
+		traction.clear();
+
+		for (int i = 0; i < particles.size(); i++)
+		{
+			traction.append(&particles[i].traction);
 		}
 
 		return *this;
@@ -147,7 +202,7 @@ public:
 	double dot(ParticleSystem& ps)
 	{
 		double temp = 0.0;
-		for (int i =0; i < particles.size(); i++)
+		for (size_t i =0; i < particles.size(); i++)
 		{
 			temp += particles[i].dot(ps.particles[i]);
 		}
@@ -155,9 +210,9 @@ public:
 
 	}
 
-	static double dot(ParticleSystem& particle, ParticleSystem& qarticle)
+	static double dot(ParticleSystem& particles, ParticleSystem& qarticles)
 	{
-		return particle.dot(qarticle);
+		return particles.dot(qarticles);
 	}
 
 	int getN()
@@ -170,8 +225,23 @@ public:
 		*this = *this + (*ps) * scale;
 	}
 
-	
+	void operator ~(){}
 
+	RectCoord operator()(const SphereCoord& x) const
+	{
+		RectCoord temp;
+
+		for (SingleParticle p : particles)
+		{
+			RectCoord r = x.center - p.center;
+			if ( sqrt(r.x * r.x + r.y * r.y + r.z * r.z) < 4.0)
+				temp += p.flow(x);
+			else
+				temp += p.quadflow(x);
+		}
+
+		return temp;
+	}
 
 };
 
@@ -185,27 +255,31 @@ public:
 
 		ParticleSystem temp(ps.getN());
 
-		//persorm self interation part of operator.
-		for (int i = 0; i < ps.particles.size(); i++)
-			temp.particles[i] = L * ps.particles[i];
-
-		for (int i = 0; i < ps.particles.size(); i++)
+		for (size_t i = 0; i < ps.particles.size(); i++)
 		{
-			for (int j = 0; j < ps.particles.size(); j++)
+			temp.particles[i] = std::move(L * ps.particles[i]);
+			RectCoord center = ps.particles[i].center;
+			SingleParticle tr(center, ps.particles[i].numSeriesTerms);
+			
+			SphereData t;
+			t.resize(NUMGLNODES);
+			for (int theta = 0; theta < NUMGLNODES; theta++)
+				t[theta].resize(NUMTRAPNODES);
+
+			std::time_t ti = std::time(0);
+
+			for (size_t j = 0; j < ps.particles.size(); j++)
 			{
 				if (i != j)
-					for (int t = 0; t < NUMGLNODES; t++)
-						for (int p = 0; p < temp.particles[i].numNodes; p++)
-						{
-
-							SurfaceCoord s(PI / 2.0 * (GLnodes[t] + 1), 2.0 * PI * (double)p / (double)ps.particles[i].numNodes);
-							SphereCoord x(s, ps.particles[i].center);
-							temp.particles[i].data[0][t][p] += ps.particles[j].traction(x);
-						}
-
+				{
+					if(norm(ps.particles[i].center - ps.particles[j].center) < 4.0)
+						t = t + discretize(&ps.particles[j].traction, center);
+					else
+						t = t + discretize(&ps.particles[j].quadtraction, center);
+				}
 			}
-			temp.particles[i].refreshData();
-			std::cout << "Operator on particle " << i + 1 << " computed.\n";
+			temp.particles[i] += SingleParticle(t , center , ps.particles[i].numSeriesTerms);
+			std::cout << "Operator on particle " << i + 1 << " computed. Time elapsed: " << std::time(0) - ti <<"\n";
 		}
 
 		return temp;
@@ -221,27 +295,31 @@ public:
 
 			ParticleSystem temp(ps.getN());
 
-			//persorm self interation part of operator.
-			for (int i = 0; i < ps.particles.size(); i++)
-				temp.particles[i] = R * ps.particles[i];
-
-			for (int i = 0; i < ps.particles.size(); i++)
+			for (size_t i = 0; i < ps.particles.size(); i++)
 			{
-				for (int j = 0; j < ps.particles.size(); j++)
+				temp.particles[i] = std::move(R * ps.particles[i]);
+				RectCoord center = ps.particles[i].center;
+				SingleParticle tr(center, ps.particles[i].numSeriesTerms);
+
+
+				SphereData t;
+				t.resize(NUMGLNODES);
+				for (int theta = 0; theta < NUMGLNODES; theta++)
+					t[theta].resize(NUMTRAPNODES);
+
+				for (size_t j = 0; j < ps.particles.size(); j++)
 				{
 					if (i != j)
-						for (int t = 0; t < NUMGLNODES; t++)
-							for (int p = 0; p < temp.particles[j].numNodes; p++)
-							{
-
-								SurfaceCoord s(PI / 2.0 * (GLnodes[t] + 1), 2.0 * PI * (double)p / (double)ps.particles[i].numNodes);
-								SphereCoord x(s, ps.particles[i].center);
-								temp.particles[i].data[0][t][p] -= ps.particles[j].traction(x);
-							}
-
-
+					{
+						if (norm(ps.particles[i].center - ps.particles[j].center) < 4.0)
+							t = t - discretize(&ps.particles[j].traction, center);
+						else
+							t = t - discretize(&ps.particles[j].quadtraction, center);
+					}
 				}
-				temp.particles[i].refreshData();
+				temp.particles[i] += SingleParticle(t, center, ps.particles[i].numSeriesTerms);
+				std::cout << "RHS Operator on particle " << i + 1 << " computed.\n";
+			
 			}
 			return temp;
 		}
@@ -258,55 +336,54 @@ public:
 };
 
 
+//Solve single particle problem with linear combinations of F,T, compare to exact solution off sphere.
+// evaulate solution for single sphere problem off sphere, compare to exact solution off sphere.
+//Two particles widely seperated, different forces and torques, compare solutions to isolated sphere problem.
+// Show difference in data using sup norm.
 
-
-
-
-ParticleSystem SolveMobilityManySphere(std::vector<RectCoord> cs,std::vector<RectCoord> Fs, std::vector<RectCoord> Ts, int seriesSize)
+ParticleSystem SolveMobilityManySphere(std::vector<RectCoord> cs,std::vector<RectCoord> Fs, std::vector<RectCoord> Ts, int seriesSize ,const ParticleSystem & initial= ParticleSystem(0), int numIters = 100)
 {
-
-	SphericalVectorField initialguess(&e_r);
 
 	if ((cs.size() != Fs.size()) || (Fs.size() != Ts.size()))
 	{
 		std::cout << "Error: size mismatch between mobility problem input vectors.\n";
-		return ParticleSystem();
+		return ParticleSystem(0);
 	}
 
 	int size = cs.size();
-
-	ParticleSystem BIEsolution;
-	for(int i = 0; i < size; i++)
-		BIEsolution.push_back(SingleParticle(discretize(&initialguess), cs[i], seriesSize, NUMTRAPNODES));
-
+	ParticleSystem BIEsolution(size);
+	if (initial.particles.size() == size)
+		BIEsolution = initial;
+	
+		
 	PSLHSOperator L;
 
-	std::vector<ForceBalance> rhos;
-
-	for (int i = 0; i < size; i++)
-		rhos.push_back(ForceBalance(Fs[i], Ts[i]));
 
 
-	ParticleSystem rh;
+    ParticleSystem rh(size);
+	
 	for (int i = 0; i < size; i++)
 	{
-		SphereData* temp = discretize(&rhos[i]);
-		rh.push_back(SingleParticle(temp, cs[i], seriesSize, NUMTRAPNODES));
-		delete temp;
+		ForceBalance rho = ForceBalance(Fs[i], Ts[i]);
+		rh.particles[i] = SingleParticle(discretize(&rho , cs[i]), cs[i], seriesSize);
 	}
 
+
+	BIEsolution;
 	PSRHSOperator R;
 	ParticleSystem rhs = R * rh;
 
-	PSIdentityPreconditioner* I = new PSIdentityPreconditioner();
+	PSIdentityPreconditioner I;
 
-	GMRES(&L, &BIEsolution, &rhs, I, 20, 5, 1e-6);
+	GMRES(&L, &BIEsolution, &rhs, &I, numIters, 1, 1e-9);
 
 
 
 	ParticleSystem soln = BIEsolution + rh;
 
-	delete I;
+	std::cout << Integrate(&BIEsolution, 1.0, BIEsolution.particles[0].center) * 0.25 / PI << std::endl;
+	std::cout << Integrate(&rh, 1.0, rh.particles[0].center) * 0.25 / PI << std::endl;
+
 	return soln;
 
 }
