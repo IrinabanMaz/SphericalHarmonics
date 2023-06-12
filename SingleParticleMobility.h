@@ -3,6 +3,7 @@
 #include "GMRES.h"
 
 const int MAXITER = 100;
+int numcount = 0;
 class SingleParticle
 {
 public:
@@ -10,10 +11,12 @@ public:
 
 	RectCoord center;
 
-
+	
 	SphereData data;
 	VSHSeries fourierdata;
 
+
+	MathConstants consts;
 	SingleLayerDirectDiscrete quadflow;
 	StokesTractionDirectDiscrete quadtraction;
 
@@ -22,39 +25,37 @@ public:
 	StokesTractionHarmonic traction;
 	
 
-	SingleParticle(RectCoord c = RectCoord(),int n = 5  ) :
-		  fourierdata(n , c),
-		  quadflow(&data , c),
-		  quadtraction(&data , c),
+	SingleParticle(RectCoord c = RectCoord(),int n = 6  ) :
+		  data(2*n + 1,2*n + 1),
+		  consts(2 * n+1 , 2 * n + 1),
+		  fourierdata(n, &consts, c),
+		  quadflow(&data,&consts, c),
+		  quadtraction(&data,&consts , c),
 		  flow(n , c) ,
 		  pressure(n,c) , 
 		  traction(&flow , &pressure),
 		  center(c),
 		  numSeriesTerms(n)
 	{
-		data.resize((int)NUMGLNODES);
-		for (int i = 0; i < (int)NUMGLNODES; i++)
-		{
-			data[i].resize((int)NUMTRAPNODES);
-			for (int j = 0; j < NUMTRAPNODES; j++)
-				data[i][j] = 0.0;
-		}
 		fourierdata.approximate(data, numSeriesTerms);
 		flow.solve(fourierdata);
 		pressure.solve(fourierdata);
 	}
 
-	SingleParticle(const SphereData& d, RectCoord c ,int nst):  
-		numSeriesTerms(nst),
+	SingleParticle(const SphereData& d, RectCoord c, int nst) :
 		data(d),
-		quadflow(&data, c),
-		quadtraction(&data, c),
-		fourierdata(nst , c),
+		consts(2 * nst + 1, 2 * nst + 1),
+		numSeriesTerms(nst),
+		fourierdata(nst, &consts, c),
+		quadflow(&data, &consts, c),
+		quadtraction(&data, &consts, c),
 		flow(nst , c),
 		pressure(nst , c),
 		traction(&flow, &pressure),
 		center(c)
 	{
+		if (data.size() != 2 * nst + 1)
+			std::cout << "Error! size mismatch in dimensions of particle.\n";
 		fourierdata.approximate(data, numSeriesTerms);
 		flow.solve(fourierdata);
 		pressure.solve(fourierdata);
@@ -66,38 +67,28 @@ public:
 	SingleParticle(const SingleParticle& particle) :
 		numSeriesTerms(particle.numSeriesTerms) ,
 		data(particle.data),
-		quadflow(&data, particle.center),
-		quadtraction(&data, particle.center),
+		consts(2*particle.numSeriesTerms + 1 , 2 * particle.numSeriesTerms + 1),
+		quadflow(&data,&consts, particle.center),
+		quadtraction(&data,&consts, particle.center),
 		fourierdata(particle.fourierdata),
 		flow(particle.flow), 
 		pressure(particle.pressure),
 		traction(&flow, &pressure),
 		center(particle.center)
-	{}
+	{
+	}
 
-	SingleParticle(SingleParticle&& particle) noexcept:
-		numSeriesTerms(particle.numSeriesTerms),
-		data(std::move(particle.data)),
-		quadflow(&data, particle.center),
-		quadtraction(&data, particle.center),
-		fourierdata(std::move(particle.fourierdata)),
-		flow(std::move(particle.flow)),
-		pressure(std::move(particle.pressure)),
-		traction(&flow, &pressure),
-		center(particle.center)
-	{}
-
-	SingleParticle operator +(const SingleParticle & particle)
+	SingleParticle operator +(const SingleParticle & particle) const
 	{
 		SingleParticle temp(center , numSeriesTerms);
 
 		
-			for (int t = 0; t < (int)NUMGLNODES; t++)
-				for (int p = 0; p < (int)NUMTRAPNODES; p++)
+			for (int t = 0; t < (int)consts.NUMGLNODES; t++)
+				for (int p = 0; p < (int)consts.NUMTRAPNODES; p++)
 					temp.data[t][p] = data[t][p] + particle.data[t][p];
 		
 
-		temp.fourierdata = std::move(fourierdata + particle.fourierdata);
+		temp.fourierdata = fourierdata + particle.fourierdata;
 
 
 		temp.numSeriesTerms = numSeriesTerms;
@@ -111,15 +102,15 @@ public:
 
 	}
 
-    SingleParticle operator -(const SingleParticle & particle)
+    SingleParticle operator -(const SingleParticle & particle) const
 	{
 		SingleParticle temp(center , numSeriesTerms);
 
-		for (int t = 0; t < NUMGLNODES; t++)
-			for (int p = 0; p < NUMTRAPNODES; p++)
+		for (int t = 0; t < consts.NUMGLNODES; t++)
+			for (int p = 0; p < consts.NUMTRAPNODES; p++)
 				temp.data[t][p] = data[t][p] - particle.data[t][p];
 
-		temp.fourierdata = std::move(fourierdata - particle.fourierdata);
+		temp.fourierdata = fourierdata - particle.fourierdata;
 
 		temp.numSeriesTerms = numSeriesTerms;
 
@@ -135,11 +126,11 @@ public:
 	{
 		SingleParticle temp(center , numSeriesTerms);
 
-		for (int t = 0; t < NUMGLNODES; t++)
-			for (int p = 0; p < NUMTRAPNODES; p++)
+		for (int t = 0; t < consts.NUMGLNODES; t++)
+			for (int p = 0; p < consts.NUMTRAPNODES; p++)
 				temp.data[t][p] = - data[t][p];
 
-		temp.fourierdata = std::move(-fourierdata);
+		temp.fourierdata = -fourierdata;
 
 		temp.numSeriesTerms = numSeriesTerms;
 
@@ -152,24 +143,44 @@ public:
 
     SingleParticle & operator +=(const SingleParticle & particle)
 	{
-		*this = std::move(*this + particle);
+		for (int t = 0; t < (int)consts.NUMGLNODES; t++)
+			for (int p = 0; p < (int)consts.NUMTRAPNODES; p++)
+				data[t][p] += particle.data[t][p];
+
+
+		fourierdata += particle.fourierdata;
+
+
+
+		flow.solve(fourierdata);
+		pressure.solve(fourierdata);
 		return *this;
 	}
 
 	SingleParticle & operator *=(const double & a)
 	{
-		*this = std::move((*this) * a);
+		for (int t = 0; t < (int)consts.NUMGLNODES; t++)
+			for (int p = 0; p < (int)consts.NUMTRAPNODES; p++)
+				data[t][p] *= a;
+
+
+		fourierdata *= a;
+
+
+
+		flow.solve(fourierdata);
+		pressure.solve(fourierdata);
 		return *this;
 	}
 
-	SingleParticle operator *(const double& a)
+	SingleParticle operator *(const double& a) const
 	{
 		SingleParticle temp(center , numSeriesTerms);
-		for (int t = 0; t < (int)NUMGLNODES; t++)
-			for (int p = 0; p < (int)NUMTRAPNODES; p++)
+		for (int t = 0; t < (int)consts.NUMGLNODES; t++)
+			for (int p = 0; p < (int)consts.NUMTRAPNODES; p++)
 				temp.data[t][p] = data[t][p] * a;
 
-		temp.fourierdata = std::move(fourierdata * a);
+		temp.fourierdata = fourierdata * a;
 
 		temp.numSeriesTerms = numSeriesTerms;
 
@@ -186,6 +197,7 @@ public:
 		data = particle.data;
 		fourierdata = particle.fourierdata;
 		numSeriesTerms = particle.numSeriesTerms;
+		consts = particle.consts;
 		flow = particle.flow;
 		pressure = particle.pressure;
 		center = particle.center;
@@ -194,76 +206,78 @@ public:
 
 	}
 
-	SingleParticle& operator =(SingleParticle&& particle) noexcept
-	{
-		data = std::move(particle.data);
-		fourierdata = std::move(particle.fourierdata);
-		numSeriesTerms = particle.numSeriesTerms;
-		flow = std::move(particle.flow);
-		pressure = std::move(particle.pressure);
-		center = particle.center;
-
-		return *this;
-
-	}
 
 
-	double norm()
+	double norm() const
 	{
 		return sqrt(dot(*this));
 	}
 
-	double dot(SingleParticle& particle)
+	double dot(const SingleParticle& particle) const
 	{
 		return L2InnerProductDiscrete(data , particle.data );
 	}
 
-	static double dot(SingleParticle &particle, SingleParticle& qarticle)
+	static double dot(const SingleParticle &particle, const SingleParticle& qarticle)
 	{
 		return particle.dot(qarticle);
 	}
 
-	int getN()
+	int getN() const
 	{
-		return (int)NUMGLNODES * (int)NUMTRAPNODES * 3;
+		return (int)consts.NUMGLNODES * (int)consts.NUMTRAPNODES * 3;
 	}
 
 	void axpy(SingleParticle* particle, double scale)
 	{
-		*this = *this + (*particle) * scale;
+
+
+		for (int t = 0; t < (int)consts.NUMGLNODES; t++)
+			for (int p = 0; p < (int)consts.NUMTRAPNODES; p++)
+				data[t][p] +=particle->data[t][p] * scale;
+
+
+		fourierdata.axpy( particle->fourierdata , scale);
+
+
+
+		flow.solve(fourierdata);
+		pressure.solve(fourierdata);
+
 	}
 
 	
 
 	void refreshData()
 	{
-		VSHSeries newSeries(numSeriesTerms, center);
-        newSeries.approximate(data , numSeriesTerms);
-		fourierdata = newSeries;
+		fourierdata.approximate(data, numSeriesTerms);
 		
 
 		flow.solve(fourierdata);
 		pressure.solve(fourierdata);
 	}
 
-	void operator ~()
-	{
-
-	}
+	
 };
 
-RectCoord rotationCoefficient(const SphereData& data , const RectCoord & center,const double & radius)
+RectCoord rotationCoefficient(const SphereData& data , const RectCoord & center,const double & radius , const MathConstants & consts)
 {
 	
 
 		RectCoord total = 0.0;
 
-		for (int p = 0; p < NUMTRAPNODES; p++)
-			for (int i = 0; i < NUMGLNODES; i++)
+		MathConstants temp;
+		if (consts.NUMGLNODES != data.size() || consts.NUMTRAPNODES != data[0].size())
+			temp = MathConstants(data[0].size(), data.size());
+		else
+			temp = consts;
+
+		for (int p = 0; p < temp.NUMTRAPNODES; p++)
+			for (int i = 0; i < temp.NUMGLNODES; i++)
 			{
-				SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+				SurfaceCoord s(temp.PI / 2.0 * (temp.GLnodes[i] + 1), 2.0 * temp.PI * (double)p / (double)temp.NUMTRAPNODES);
 				SphereCoord x(radius, s, center);
-				total = total + radius * radius * sin(s.theta) * GLweights[i] * cross(SphereToRect(x) - x.center,data[i][p]) * (PI / NUMTRAPNODES) * PI;
+				total = total + radius * radius * sin(s.theta) * temp.GLweights[i] * cross(SphereToRect(x) - x.center,data[i][p]) * (temp.PI / temp.NUMTRAPNODES) * consts.PI;
 
 
 			}
@@ -275,17 +289,17 @@ RectCoord rotationCoefficient(const SphereData& data , const RectCoord & center,
 class LHSOperator
 {
 public:
-	SingleParticle operator *( SingleParticle & particle)
+	SingleParticle operator *(const SingleParticle & particle) const
 	{
 		SingleParticle temp(particle.center , particle.numSeriesTerms);
 
-		RectCoord average = 0.25 / PI * IntegrateDiscrete(particle.data );
-		RectCoord rcoef = 0.375/PI * rotationCoefficient(particle.data, particle.center, 1.0);
+		RectCoord average = 0.25 / particle.consts.PI * IntegrateDiscrete(particle.data , 1.0,particle.center, particle.consts );
+		RectCoord rcoef = 0.375/particle.consts.PI * rotationCoefficient(particle.data, particle.center, 1.0 , particle.consts);
 
-		for(int t = 0; t < NUMGLNODES; t++)
-			for (int p = 0; p < NUMTRAPNODES; p++)
+		for(int t = 0; t < particle.consts.NUMGLNODES; t++)
+			for (int p = 0; p < particle.consts.NUMTRAPNODES; p++)
 			{
-				SurfaceCoord s(PI / 2.0 * (GLnodes[t] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+				SurfaceCoord s(particle.consts.PI / 2.0 * (particle.consts.GLnodes[t] + 1), 2.0 * particle.consts.PI * (double)p / (double)particle.consts.NUMTRAPNODES);
 				SphereCoord x(s , particle.center);
 
 				temp.data[t][p] =  particle.data[t][p] + particle.traction(x) + average + cross(rcoef, SphereToRect(x) - x.center);
@@ -308,11 +322,11 @@ public:
 	    SingleParticle temp(particle.center , particle.numSeriesTerms);
 
 
-		for (int t = 0; t < NUMGLNODES; t++)
+		for (int t = 0; t < particle.consts.NUMGLNODES; t++)
 		{
-			for (int p = 0; p < NUMTRAPNODES; p++)
+			for (int p = 0; p < particle.consts.NUMTRAPNODES; p++)
 			{
-				SurfaceCoord s(PI / 2.0 * (GLnodes[t] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+				SurfaceCoord s(particle.consts.PI / 2.0 * (particle.consts.GLnodes[t] + 1), 2.0 * particle.consts.PI * (double)p / (double)particle.consts.NUMTRAPNODES);
 				SphereCoord x(s , particle.center);
 
 				temp.data[t][p] =  -particle.data[t][p] - particle.traction(x);
@@ -341,6 +355,7 @@ class ForceBalance : public SphericalVectorField
 private:
 	RectCoord force;
 	RectCoord torque;
+	double PI = 4.0 * atan(1.0);
 public:
 
 	ForceBalance(RectCoord f , RectCoord t) : force(f) , torque(t){}
@@ -361,8 +376,11 @@ SingleParticle SolveMobilitySingleSphere(RectCoord F , RectCoord T , int seriesS
 	LHSOperator L;
 	ForceBalance rho(F,T);
 	
+	const double PI = 4.0 * atan(1.0);
 
-	SingleParticle rh(discretize(&rho), RectCoord(), seriesSize);
+	MathConstants consts(2 * seriesSize + 1, 2 * seriesSize + 1);
+
+	SingleParticle rh(discretize(&rho, RectCoord() , consts ), RectCoord(), seriesSize);
 	RHSOperator R;
 	SingleParticle rhs = R * rh;
 	
@@ -379,7 +397,7 @@ SingleParticle SolveMobilitySingleSphere(RectCoord F , RectCoord T , int seriesS
 	std::cout <<"Average of rhs: " << IntegrateDiscrete(rh.data) * 0.25 / PI << std::endl;
 	std::cout <<"Integral of flow: " <<Integrate(&soln.flow) * 0.25 / PI << std::endl;
 	std::cout << "Integral of rho: " << Integrate(&rh.flow) * 0.25 / PI << std::endl;
-	std::cout << "Angular Velocity of rho: " << rotationCoefficient(discretize(&rh.flow), RectCoord(), 1.0) * 0.375 / PI << "\n";
+	std::cout << "Angular Velocity of rho: " << rotationCoefficient(discretize(&rh.flow), RectCoord(), 1.0 , rh.consts) * 0.375 / PI << "\n";
 	return soln;
 
 }
@@ -394,14 +412,13 @@ SingleParticle SolveBIEWithKnown(int seriesSize)
 	std::default_random_engine gen;
 	std::uniform_real_distribution rand;
 
-	SphereData data;
+	SphereData data(2 * seriesSize + 1, 2 * seriesSize + 1);
 
-	data.resize(NUMGLNODES);
+	
 
-	for (size_t t = 0; t < NUMGLNODES; t++)
+	for (size_t t = 0; t < data.size(); t++)
 	{
-		data[t].resize(NUMTRAPNODES);
-		for (size_t p = 0; p < NUMTRAPNODES; p++)
+		for (size_t p = 0; p < data[t].size(); p++)
 			data[t][p] = RectCoord(rand(gen), rand(gen), rand(gen));
 	}
 	SingleParticle rh(data, RectCoord(), seriesSize);
@@ -419,17 +436,17 @@ SingleParticle SolveBIEWithKnown(int seriesSize)
 
 	
 	std::cout << "[ ";
-	for (int t = 0; t < NUMGLNODES - 1; t++)
+	for (int t = 0; t < err.consts.NUMGLNODES - 1; t++)
 	{
 		std::cout << "[";
-		for (int p = 0; p < NUMTRAPNODES - 1; p++)
+		for (int p = 0; p < err.consts.NUMTRAPNODES - 1; p++)
 		  std::cout << norm(err.data[t][p]) << ", ";
-		std::cout << norm(err.data[t][NUMTRAPNODES - 1]) << " ], ";
+		std::cout << norm(err.data[t][err.consts.NUMTRAPNODES - 1]) << " ], ";
 	}
 	std::cout << "[";
-	for (int p = 0; p < NUMTRAPNODES - 1; p++)
-		std::cout << norm(err.data[NUMTRAPNODES - 1][p]) << ", ";
-	std::cout << norm(err.data[NUMGLNODES - 1][NUMTRAPNODES - 1]) <<" ]]" << std::endl;
+	for (int p = 0; p < err.consts.NUMTRAPNODES - 1; p++)
+		std::cout << norm(err.data[(int)(err.consts.NUMTRAPNODES - 1)][p]) << ", ";
+	std::cout << norm(err.data[(int)(err.consts.NUMGLNODES - 1)][err.consts.NUMTRAPNODES - 1]) <<" ]]" << std::endl;
 
 
 	return solution;

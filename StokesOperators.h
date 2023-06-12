@@ -44,175 +44,6 @@ T_i[\boldsymbol{\rho}](\boldsymbol{x}) = \int_\Gamma T_{i,j,k}(\boldsymbol{x} - 
 #include <cmath>
 
 
-/**
- * @brief Coefficient of VReal or VImag in the SingleLayerHarmonic series.
- * @param r Radius from a SphereCoord.
- * @param n Degree of the VReal or VImag term.
- * @param rhohatV Normalized Fourier coefficient of the associated VReal or VImag function.
- * @param rhohatW Normalized Fourier coefficient of the associated WReal or WImag function.
- * @return @f{equation}{
-f_{n,m}^V(r) = \frac{n}{(2n + 1)(2n+3)}r^{-(n+2)} \hat{\rho}_{n,m}^V + \frac{n+1}{4n + 2}\left(r^{-n+2} - r^{-n}\right)\hat{\rho}_{n,m}^W
- @f}
-*/
-double fV(double r, int n, double rhohatV, double rhohatW)
-{
-
-    if (n == 0)
-        return 0;
-
-    double m = double(n);
-
-    double temp1 = m / ((2.0 * m + 1.0) * (2.0 * m + 3.0) * pow(r, n + 2));
-    temp1 *= rhohatV;
-
-    double temp2 = m / (4.0 * m + 2.0) * (1.0 / pow(r, n + 2) - 1.0 / pow(r, n));
-    temp2 *= rhohatW;
-
-    return temp1 + temp2;
-}
-/**
- * @brief Computes the derivative of fV() with respect to r. Used in helper functions for SingleLayerHarmonic.
- * @param r Radius from a SphereCoord.
- * @param n Degree of the VReal or VImag term.
- * @param rhohatV Normalized Fourier coefficient of the associated VReal or VImag function.
- * @param rhohatW Normalized Fourier coefficient of the associated WReal or WImag function.
- * @return @f{equation}{
-f_{n,m}^{V'}(r) = \frac{-n(n+2)}{(2n + 1)(2n+3)}r^{-(n+3)} \hat{\rho}_{n,m}^V + \frac{n+1}{4n + 2}\left(n r^{-(n+1) - (n+2)r^{-(n+3)}}\right)\hat{\rho}_{n,m}^W
- @f}
-*/
-double fVprime(double r, int n, double rhohatV, double rhohatW)
-{
-
-    if (n == 0)
-        return 0;
-
-    double m = double(n);
-
-    double temp1 = -m * (m + 2.0) / ((2.0 * m + 1.0) * (2.0 * m + 3.0) * pow(r, n + 3));
-    temp1 *= rhohatV;
-
-    double temp2 = m / (4.0 * m + 2.0) * (-(m + 2.0) / pow(r, n + 3) + m / pow(r, n + 1));
-    temp2 *= rhohatW;
-
-    return temp1 + temp2;
-}
-/**
- * @brief Coefficient of WReal or WImag in the SingleLayerHarmonic series.
- * @param r Radius from a SphereCoord.
- * @param n Degree of the WReal or WImag term.
- * @param rhohatW Normalized Fourier coefficient of the associated WReal or WImag function.
- * @return @f{equation}{
- f_{n,m}^W(r) =\frac{n}{(2n + 1)(2n - 1)} r^{-n}\hat{\rho}_{n,m}^W
- @f}
-*/
-double fW(double r, int n, double rhohatW)
-{
-    if (n == 0)
-        return 0;
-
-    double m = double(n);
-
-    double temp1 = (m + 1.0) / ((2.0 * m + 1.0) * (2.0 * m - 1.0) * pow(r, n));
-    temp1 *= rhohatW;
-
-
-
-
-
-    return temp1;
-
-}
-/**
- * @brief Coefficient of WReal or WImag in the SingleLayerHarmonic series.
- * @param r Radius from a SphereCoord.
- * @param n Degree of the WReal or WImag term.
- * @param rhohatW Normlized Fourier coefficient of the associated WReal or WImag function.
- * @return @f{equation}{
- f_{n,m}^{W'}(r) =\frac{-n^2}{(2n + 1)(2n - 1)} r^{-(n+1)}\hat{\rho}_{n,m}^W
- @f}
-*/
-double fWprime(double r, int n, double rhohatW)
-{
-    if (n == 0)
-        return 0;
-    double m = double(n);
-
-    double temp1 = -(m + 1.0) * m / ((2.0 * m + 1.0) * (2.0 * m - 1.0) * pow(r, n + 1));
-    temp1 *= rhohatW;
-
-
-
-
-
-    return temp1;
-
-}
-/**
- * @brief Coefficient of XReal or XImag in the SingleLayerHarmonic series.
- * @param r Radius from a SphereCoord.
- * @param n Degree of the XReal or XImag term.
- * @param rhohatW Normalized Fourier coefficient of the associated XReal or XImag function.
- * @return @f{equation}{
- f_{n,m}^X(r) =\frac{1}{2n + 1} r^{-(n+1)}\hat{\rho}_{n,m}^X
- @f}
-*/
-double fX(double r, int n, double rhohatX)
-{
-    if (n == 0)
-        return 0;
-
-    double m = double(n);
-
-    double temp = 1.0 / ((2.0 * m + 1.0) * pow(r, n + 1));
-    temp *= rhohatX;
-
-    return temp;
-}
-/**
- * @brief Coefficient of XReal or XImag in the SingleLayerHarmonic series.
- * @param r Radius from a SphereCoord.
- * @param n Degree of the XReal or XImag term.
- * @param rhohatW Normalized Fourier coefficient of the associated XReal or XImag function.
- * @return @f{equation}{
- f_{n,m}^{X'}(r) =\frac{-(n+1)}{2n + 1} r^{-(n+2)}\hat{\rho}_{n,m}^X
- @f}
-*/
-double fXprime(double r, int n, double rhohatX)
-{
-
-    if (n == 0)
-        return 0;
-
-    double m = double(n);
-
-    double temp = -(m + 1.0) / ((2.0 * m + 1.0) * pow(r, n + 2));
-    temp *= rhohatX;
-
-    return temp;
-}
-/**
- * @brief Coefficient of WReal or WImag in the StokesPressure series.
- * @param r Radius from a SphereCoord.
- * @param n Degree of the WReal or WImag term.
- * @param rhohatW Normalized Fourier coefficient of the associated WReal or WImag function.
- * @return @f{equation}{
-g_{n,m}(r) = n r^{-(n+1) }\hat{\rho}_{n,m}^W
- @f}
-*/
-double g(double r, int n, double rhohatW)
-{
-    double m = double(n);
-
-    if (isnan(rhohatW))
-        return 0.0;
-
-    double temp = m / pow(r, n + 1);
-    temp *= rhohatW;
-
-
-
-    return temp;
-}
 
 
 
@@ -245,26 +76,174 @@ private:
     XReal xr;
     XImag xi;
 
+    /**
+ * @brief Coefficient of VReal or VImag in the SingleLayerHarmonic series.
+ * @param r Radius from a SphereCoord.
+ * @param n Degree of the VReal or VImag term.
+ * @param rhohatV Normalized Fourier coefficient of the associated VReal or VImag function.
+ * @param rhohatW Normalized Fourier coefficient of the associated WReal or WImag function.
+ * @return @f{equation}{
+f_{n,m}^V(r) = \frac{n}{(2n + 1)(2n+3)}r^{-(n+2)} \hat{\rho}_{n,m}^V + \frac{n+1}{4n + 2}\left(r^{-n+2} - r^{-n}\right)\hat{\rho}_{n,m}^W
+ @f}
+*/
+    inline double fV(double r, int n, double rhohatV, double rhohatW) const
+    {
+
+        if (n == 0)
+            return 0;
+
+        double m = double(n);
+
+        double temp1 = m / ((2.0 * m + 1.0) * (2.0 * m + 3.0) * pow(r, n + 2));
+        temp1 *= rhohatV;
+
+        double temp2 = m / (4.0 * m + 2.0) * (1.0 / pow(r, n + 2) - 1.0 / pow(r, n));
+        temp2 *= rhohatW;
+
+        return temp1 + temp2;
+    }
+    /**
+     * @brief Computes the derivative of fV() with respect to r. Used in helper functions for SingleLayerHarmonic.
+     * @param r Radius from a SphereCoord.
+     * @param n Degree of the VReal or VImag term.
+     * @param rhohatV Normalized Fourier coefficient of the associated VReal or VImag function.
+     * @param rhohatW Normalized Fourier coefficient of the associated WReal or WImag function.
+     * @return @f{equation}{
+    f_{n,m}^{V'}(r) = \frac{-n(n+2)}{(2n + 1)(2n+3)}r^{-(n+3)} \hat{\rho}_{n,m}^V + \frac{n+1}{4n + 2}\left(n r^{-(n+1) - (n+2)r^{-(n+3)}}\right)\hat{\rho}_{n,m}^W
+     @f}
+    */
+    inline double fVprime(double r, int n, double rhohatV, double rhohatW) const
+    {
+
+        if (n == 0)
+            return 0;
+
+        double m = double(n);
+
+        double temp1 = -m * (m + 2.0) / ((2.0 * m + 1.0) * (2.0 * m + 3.0) * pow(r, n + 3));
+        temp1 *= rhohatV;
+
+        double temp2 = m / (4.0 * m + 2.0) * (-(m + 2.0) / pow(r, n + 3) + m / pow(r, n + 1));
+        temp2 *= rhohatW;
+
+        return temp1 + temp2;
+    }
+    /**
+     * @brief Coefficient of WReal or WImag in the SingleLayerHarmonic series.
+     * @param r Radius from a SphereCoord.
+     * @param n Degree of the WReal or WImag term.
+     * @param rhohatW Normalized Fourier coefficient of the associated WReal or WImag function.
+     * @return @f{equation}{
+     f_{n,m}^W(r) =\frac{n}{(2n + 1)(2n - 1)} r^{-n}\hat{\rho}_{n,m}^W
+     @f}
+    */
+    inline double fW(double r, int n, double rhohatW) const
+    {
+        if (n == 0)
+            return 0;
+
+        double m = double(n);
+
+        double temp1 = (m + 1.0) / ((2.0 * m + 1.0) * (2.0 * m - 1.0) * pow(r, n));
+        temp1 *= rhohatW;
+
+
+
+
+
+        return temp1;
+
+    }
+    /**
+     * @brief Coefficient of WReal or WImag in the SingleLayerHarmonic series.
+     * @param r Radius from a SphereCoord.
+     * @param n Degree of the WReal or WImag term.
+     * @param rhohatW Normlized Fourier coefficient of the associated WReal or WImag function.
+     * @return @f{equation}{
+     f_{n,m}^{W'}(r) =\frac{-n^2}{(2n + 1)(2n - 1)} r^{-(n+1)}\hat{\rho}_{n,m}^W
+     @f}
+    */
+    inline double fWprime(double r, int n, double rhohatW) const
+    {
+        if (n == 0)
+            return 0;
+        double m = double(n);
+
+        double temp1 = -(m + 1.0) * m / ((2.0 * m + 1.0) * (2.0 * m - 1.0) * pow(r, n + 1));
+        temp1 *= rhohatW;
+
+
+
+
+
+        return temp1;
+
+    }
+    /**
+     * @brief Coefficient of XReal or XImag in the SingleLayerHarmonic series.
+     * @param r Radius from a SphereCoord.
+     * @param n Degree of the XReal or XImag term.
+     * @param rhohatW Normalized Fourier coefficient of the associated XReal or XImag function.
+     * @return @f{equation}{
+     f_{n,m}^X(r) =\frac{1}{2n + 1} r^{-(n+1)}\hat{\rho}_{n,m}^X
+     @f}
+    */
+    inline double fX(double r, int n, double rhohatX) const
+    {
+        if (n == 0)
+            return 0;
+
+        double m = double(n);
+
+        double temp = 1.0 / ((2.0 * m + 1.0) * pow(r, n + 1));
+        temp *= rhohatX;
+
+        return temp;
+    }
+    /**
+     * @brief Coefficient of XReal or XImag in the SingleLayerHarmonic series.
+     * @param r Radius from a SphereCoord.
+     * @param n Degree of the XReal or XImag term.
+     * @param rhohatW Normalized Fourier coefficient of the associated XReal or XImag function.
+     * @return @f{equation}{
+     f_{n,m}^{X'}(r) =\frac{-(n+1)}{2n + 1} r^{-(n+2)}\hat{\rho}_{n,m}^X
+     @f}
+    */
+    inline double fXprime(double r, int n, double rhohatX) const
+    {
+
+        if (n == 0)
+            return 0;
+
+        double m = double(n);
+
+        double temp = -(m + 1.0) / ((2.0 * m + 1.0) * pow(r, n + 2));
+        temp *= rhohatX;
+
+        return temp;
+    }
+    
+
+
 public:
 
-    SingleLayerHarmonicTerm() {}
+    SingleLayerHarmonicTerm(){}
     /**
      * @brief Constructs the term in the series.
      * @param series VSHSeries corresponding to data to evaluate. 
      * @param m The order of the term.
      * @param n The degree of the term. 
     */
-    SingleLayerHarmonicTerm(const VSHSeries& series, int m, int n)
+    SingleLayerHarmonicTerm(const VSHSeries& series,  int m, int n):
+        vr(m,n),
+        vi(m,n),
+        wr(m,n),
+        wi(m,n),
+        xr(m,n),
+        xi(m,n)
     {
-
         m_ = m;
         n_ = n;
-        vr.reset(m, n);
-        vi.reset(m, n);
-        wr.reset(m, n);
-        wi.reset(m, n);
-        xr.reset(m, n);
-        xi.reset(m, n);
 
         rhohatVr = series.terms[n][m].rhohatVr;
         rhohatVi = series.terms[n][m].rhohatVi;
@@ -275,17 +254,17 @@ public:
 
     }
 
-    SingleLayerHarmonicTerm(const SingleLayerHarmonicTerm & term)
+    SingleLayerHarmonicTerm(const SingleLayerHarmonicTerm & term):
+        vr( term.m_, term.n_),
+        vi( term.m_, term.n_),
+        wr( term.m_, term.n_),
+        wi( term.m_, term.n_),
+        xr( term.m_, term.n_),
+        xi( term.m_, term.n_)
     {
-
+        
         int m = m_ = term.m_;
         int n = n_ = term.n_;
-        vr.reset(m, n);
-        vi.reset(m, n);
-        wr.reset(m, n);
-        wi.reset(m, n);
-        xr.reset(m, n);
-        xi.reset(m, n);
 
         rhohatVr = term.rhohatVr;
         rhohatVi = term.rhohatVi;
@@ -296,37 +275,18 @@ public:
 
     }
 
-    SingleLayerHarmonicTerm(const SingleLayerHarmonicTerm&& term) noexcept
-    {
-
-        int m = m_ = term.m_;
-        int n = n_ = term.n_;
-        vr.reset(m, n);
-        vi.reset(m, n);
-        wr.reset(m, n);
-        wi.reset(m, n);
-        xr.reset(m, n);
-        xi.reset(m, n);
-
-        rhohatVr = term.rhohatVr;
-        rhohatVi = term.rhohatVi;
-        rhohatWr = term.rhohatWr;
-        rhohatWi = term.rhohatWi;
-        rhohatXr = term.rhohatXr;
-        rhohatXi = term.rhohatXi;
-
-    }
+    
     SingleLayerHarmonicTerm& operator =(const SingleLayerHarmonicTerm& term)
     {
 
         int m = m_ = term.m_;
         int n = n_ = term.n_;
-        vr.reset(m, n);
-        vi.reset(m, n);
-        wr.reset(m, n);
-        wi.reset(m, n);
-        xr.reset(m, n);
-        xi.reset(m, n);
+        vr = VReal( m, n);
+        vi = VImag( m, n);
+        wr = WReal( m, n);
+        wi = WImag( m, n);
+        xr = XReal( m, n);
+        xi = XImag( m, n);
 
         rhohatVr = term.rhohatVr;
         rhohatVi = term.rhohatVi;
@@ -339,28 +299,7 @@ public:
 
     }
 
-    SingleLayerHarmonicTerm&  operator =(SingleLayerHarmonicTerm&& term) noexcept
-    {
-
-        int m = m_ = term.m_;
-        int n = n_ = term.n_;
-        vr.reset(m, n);
-        vi.reset(m, n);
-        wr.reset(m, n);
-        wi.reset(m, n);
-        xr.reset(m, n);
-        xi.reset(m, n);
-
-        rhohatVr = term.rhohatVr;
-        rhohatVi = term.rhohatVi;
-        rhohatWr = term.rhohatWr;
-        rhohatWi = term.rhohatWi;
-        rhohatXr = term.rhohatXr;
-        rhohatXi = term.rhohatXi;
-
-        return *this;
-
-    }
+    
 
     /**
      * @brief Evaluates the term.
@@ -541,114 +480,7 @@ public:
         return temp;
     }
 
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper()
-    {
-        dot_ePhi dep(this);
-        dot_eTheta det(this);
-        dot_eR der(this);
-
-        NdPhi epdp(&dep);
-        NdPhi etdp(&det);
-        NdPhi erdp(&der);
-
-        NdTheta epdt(&dep);
-        NdTheta etdt(&det);
-        NdTheta erdt(&der);
-
-        NdR epdr(&dep);
-        NdR etdr(&det);
-        NdR erdr(&der);
-
-
-
-        double ephierr = 0.0;
-        double ethetaerr = 0.0;
-        double ererr = 0.0;
-        double ephidphierr = 0.0;
-        double ephidthetaerr = 0.0;
-        double ephidrerr = 0.0;
-        double erdphierr = 0.0;
-        double ethetadthetaerr = 0.0;
-        double ethetadphierr = 0.0;
-        double ethetadrerr = 0.0;
-        double erdthetaerr = 0.0;
-        double erdrerr = 0.0;
-
-
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMGLNODES; i++)
-            {
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                SphereCoord x(1, s);
-
-                double diff = ePhi(x) - dep(x);
-                ephierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta(x) - det(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR(x) - der(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dPhi(x) - epdp(x);
-                ephidphierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dTheta(x) - epdt(x);
-                ephidthetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dR(x) - epdr(x);
-                ephidrerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-
-                diff = eTheta_dTheta(x) - etdt(x);
-                ethetadthetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dPhi(x) - etdp(x.s);
-                ethetadphierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dR(x) - etdr(x);
-                ethetadrerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-
-                diff = eR_dTheta(x) - erdt(x);
-                erdthetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dPhi(x) - erdp(x);
-                erdphierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dR(x) - erdr(x);
-                erdrerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                /*if (dot(diff, diff) > 1e-12)
-                {
-                    std::cout << " error of " << dot(diff, diff) << " at " << x << std::endl;
-                    std::cout << "value of f: " << (*f1)(x) << std::endl;
-                    std::cout << "value of g: " << (*f2)(x) << std::endl;
-
-                }
-                */
-            }
-
-        std::cout << "Error in computing ephi: " << ephierr << "\n";
-        std::cout << "Error in computing etheta: " << ethetaerr << "\n";
-        std::cout << "Error in computing er: " << ererr << "\n";
-
-        std::cout << "Error in computing ephidphi: " << ephidphierr << "\n";
-        std::cout << "Error in computing ephidtheta: " << ephidthetaerr << "\n";
-        std::cout << "Error in computing ephidr: " << ephidrerr << "\n";
-
-        std::cout << "Error in computing ethetadtheta: " << ethetadthetaerr << "\n";
-        std::cout << "Error in computing ethetadphi: " << ethetadphierr << "\n";
-        std::cout << "Error in computing ethetadr: " << ethetadrerr << "\n";
-
-        std::cout << "Error in computing erdtheta: " << erdthetaerr << "\n";
-        std::cout << "Error in computing erdphi: " << erdphierr << "\n";
-        std::cout << "Error in computing erdr: " << erdrerr << "\n";
-
-    }
+    
 
 
 };
@@ -710,29 +542,19 @@ public:
      * @brief Copy Consructor
      * @param slh Single Layer to copy.
     */
-    SingleLayerHarmonic(const SingleLayerHarmonic& slh): P(&legendrePoly)
+    SingleLayerHarmonic(const SingleLayerHarmonic& slh ): P(&legendrePoly)
     {
         terms = slh.terms;
-        center = slh.center;
-
         for (int n = 0; n < terms.size(); n++)
             for (int m = 0; m <= n; m++)
+            {
                 append(&terms[n][m]);
-    }
+            }
 
-    /**
-     * @brief Move Copy Consructor
-     * @param slh Single Layer to copy.
-    */
-    SingleLayerHarmonic(SingleLayerHarmonic&& slh) noexcept: P(&legendrePoly)
-    {
-        terms = std::move(slh.terms);
         center = slh.center;
-
-        for (int n = 0; n < terms.size(); n++)
-            for (int m = 0; m <= n; m++)
-                append(&terms[n][m]);
     }
+
+   
 
     /**
      * @brief Assignment operator.
@@ -751,27 +573,10 @@ public:
         return *this;
     }
 
-    /**
-     * @brief Move Assignment operator.
-     * @param slh Single Layer to assign.
-    */
-    SingleLayerHarmonic& operator =(SingleLayerHarmonic&& slh) noexcept
-    {
-        terms = std::move(slh.terms);
-        center = slh.center;
-        clear();
-
-        for (int n = 0; n < terms.size(); n++)
-            for (int m = 0; m <= n; m++)
-                append(&terms[n][m]);
-
-        return *this;
-    }
+   
 
 
     
-    void operator~() {}
-
     /**
      * @brief Generates the Functor from a Fourier Series representation.
      * @param series the Source boundary data.
@@ -797,9 +602,9 @@ public:
      * @brief Generates the Functor from boundary data. The Series is constructed as an intermediate step.
      * @param series the Source boundary data.
     */
-    void solve(SphericalVectorField* rho, int N , RectCoord c = RectCoord())
+    void solve(SphericalVectorField* rho, int N ,MathConstants* consts, RectCoord c = RectCoord())
     {
-        VSHSeries series(N, c);
+        VSHSeries series(N,consts, c);
         series.approximate(rho);
 
         solve(series);
@@ -830,10 +635,10 @@ public:
 
         SphereCoord sc = recenter(s, center);
 
-        for(auto i : terms)
-            for (auto j : i)
+        for(int i = 0; i < terms.size();i++)
+            for (int j = 0; j < terms[i].size();j++)
             {
-                temp += j.eR(sc);
+                temp += terms[i][j].eR(sc);
             }
 
         return temp;
@@ -847,12 +652,12 @@ public:
     {
         double temp = 0.0;
 
-        SphereCoord Temp = recenter(s, center);
+        SphereCoord sc = recenter(s, center);
 
-        for (auto i : terms)
-            for (auto j : i)
+        for (int i = 0; i < terms.size(); i++)
+            for (int j = 0; j < terms[i].size(); j++)
             {
-                temp += j.eTheta(Temp);
+                temp += terms[i][j].eTheta(sc);
             }
 
         return temp;
@@ -866,12 +671,12 @@ public:
     {
         double temp = 0.0;
 
-        SphereCoord Temp = recenter(s, center);
+        SphereCoord sc = recenter(s, center);
 
-        for (auto i : terms)
-            for (auto j : i)
+        for (int i = 0; i < terms.size(); i++)
+            for (int j = 0; j < terms[i].size(); j++)
             {
-                temp += j.ePhi(Temp);
+                temp += terms[i][j].ePhi(sc);
             }
 
         return temp;
@@ -885,12 +690,12 @@ public:
     {
         double temp = 0.0;
 
-        SphereCoord Temp = recenter(s, center);
+        SphereCoord sc = recenter(s, center);
 
-        for (auto i : terms)
-            for (auto j : i)
+        for (int i = 0; i < terms.size(); i++)
+            for (int j = 0; j < terms[i].size(); j++)
             {
-                temp += j.eR_dR(Temp);
+                temp += terms[i][j].eR_dR(sc);
             }
 
         return temp;
@@ -904,12 +709,12 @@ public:
     {
         double temp = 0.0;
 
-        SphereCoord Temp = recenter(s, center);
+        SphereCoord sc = recenter(s, center);
 
-        for (auto i : terms)
-            for (auto j : i)
+        for (int i = 0; i < terms.size(); i++)
+            for (int j = 0; j < terms[i].size(); j++)
             {
-                temp += j.eTheta_dR(Temp);
+                temp += terms[i][j].eTheta_dR(sc);
             }
 
         return temp;
@@ -923,12 +728,12 @@ public:
     {
         double temp = 0.0;
 
-        SphereCoord Temp = recenter(s, center);
+        SphereCoord sc = recenter(s, center);
 
-        for (auto i : terms)
-            for (auto j : i)
+        for (int i = 0; i < terms.size(); i++)
+            for (int j = 0; j < terms[i].size(); j++)
             {
-                temp += j.ePhi_dR(Temp);
+                temp += terms[i][j].ePhi_dR(sc);
             }
 
         return temp;
@@ -942,12 +747,12 @@ public:
     {
         double temp = 0.0;
 
-        SphereCoord Temp = recenter(s, center);
+        SphereCoord sc = recenter(s, center);
 
-        for (auto i : terms)
-            for (auto j : i)
+        for (int i = 0; i < terms.size(); i++)
+            for (int j = 0; j < terms[i].size(); j++)
             {
-                temp += j.eR_dTheta(Temp);
+                temp += terms[i][j].eR_dTheta(sc);
             }
 
         return temp;
@@ -961,12 +766,12 @@ public:
     {
         double temp = 0.0;
 
-        SphereCoord Temp = recenter(s, center);
+        SphereCoord sc = recenter(s, center);
 
-        for (auto i : terms)
-            for (auto j : i)
+        for (int i = 0; i < terms.size(); i++)
+            for (int j = 0; j < terms[i].size(); j++)
             {
-                temp += j.eTheta_dTheta(Temp);
+                temp += terms[i][j].eTheta_dTheta(sc);
             }
 
         return temp;
@@ -980,12 +785,12 @@ public:
     {
         double temp = 0.0;
 
-        SphereCoord Temp = recenter(s, center);
+        SphereCoord sc = recenter(s, center);
 
-        for (auto i : terms)
-            for (auto j : i)
+        for (int i = 0; i < terms.size(); i++)
+            for (int j = 0; j < terms[i].size(); j++)
             {
-                temp += j.ePhi_dTheta(Temp);
+                temp += terms[i][j].ePhi_dTheta(sc);
             }
 
         return temp;
@@ -999,12 +804,12 @@ public:
     {
         double temp = 0.0;
 
-        SphereCoord Temp = recenter(s, center);
+        SphereCoord sc = recenter(s, center);
 
-        for (auto i : terms)
-            for (auto j : i)
+        for (int i = 0; i < terms.size(); i++)
+            for (int j = 0; j < terms[i].size(); j++)
             {
-                temp += j.eR_dPhi(Temp);
+                temp += terms[i][j].eR_dPhi(sc);
             }
 
         return temp;
@@ -1018,12 +823,12 @@ public:
     {
         double temp = 0.0;
 
-        SphereCoord Temp = recenter(s, center);
+        SphereCoord sc = recenter(s, center);
 
-        for (auto i : terms)
-            for (auto j : i)
+        for (int i = 0; i < terms.size(); i++)
+            for (int j = 0; j < terms[i].size(); j++)
             {
-                temp += j.eTheta_dPhi(Temp);
+                temp += terms[i][j].eTheta_dPhi(sc);
             }
 
         return temp;
@@ -1037,126 +842,18 @@ public:
     {
         double temp = 0.0;
 
-        SphereCoord Temp = recenter(s, center);
+        SphereCoord sc = recenter(s, center);
 
-        for (auto i : terms)
-            for (auto j : i)
+        for (int i = 0; i < terms.size(); i++)
+            for (int j = 0; j < terms[i].size(); j++)
             {
-                temp += j.ePhi_dPhi(Temp);
+                temp += terms[i][j].ePhi_dPhi(sc);
             }
 
         return temp;
     }
 
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper()
-    {
-        dot_ePhi dep(this , center);
-        dot_eTheta det(this , center);
-        dot_eR der(this, center);
-
-        NdPhi epdp(&dep, center);
-        NdPhi etdp(&det, center);
-        NdPhi erdp(&der, center);
-
-        NdTheta epdt(&dep, center);
-        NdTheta etdt(&det, center);
-        NdTheta erdt(&der, center);
-
-        NdR epdr(&dep, center);
-        NdR etdr(&det, center);
-        NdR erdr(&der, center);
-
-
-
-        double ephierr = 0.0;
-        double ethetaerr = 0.0;
-        double ererr = 0.0;
-        double ephidphierr = 0.0;
-        double ephidthetaerr = 0.0;
-        double ephidrerr = 0.0;
-        double erdphierr = 0.0;
-        double ethetadthetaerr = 0.0;
-        double ethetadphierr = 0.0;
-        double ethetadrerr = 0.0;
-        double erdthetaerr = 0.0;
-        double erdrerr = 0.0;
-
-
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMGLNODES; i++)
-            {
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                SphereCoord x(1, s);
-
-                double diff = ePhi(x) - dep(x);
-                ephierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta(x) - det(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR(x) - der(x);
-                ererr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-
-                diff = ePhi_dPhi(x) - epdp(x);
-                ephidphierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dTheta(x) - epdt(x);
-                ephidthetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dR(x) - epdr(x);
-                ephidrerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-
-                diff = eTheta_dTheta(x) - etdt(x);
-                ethetadthetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dPhi(x) - etdp(x.s);
-                ethetadphierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dR(x) - etdr(x);
-                ethetadrerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-
-                diff = eR_dTheta(x) - erdt(x);
-                erdthetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dPhi(x) - erdp(x);
-                erdphierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dR(x) - erdr(x);
-                erdrerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                /*if (dot(diff, diff) > 1e-12)
-                {
-                    std::cout << " error of " << dot(diff, diff) << " at " << x << std::endl;
-                    std::cout << "value of f: " << (*f1)(x) << std::endl;
-                    std::cout << "value of g: " << (*f2)(x) << std::endl;
-
-                }
-                */
-            }
-
-        std::cout << "Error in computing ephi: " << ephierr << "\n";
-        std::cout << "Error in computing etheta: " << ethetaerr << "\n";
-        std::cout << "Error in computing er: " << ererr << "\n";
-
-        std::cout << "Error in computing ephidphi: " << ephidphierr << "\n";
-        std::cout << "Error in computing ephidtheta: " << ephidthetaerr << "\n";
-        std::cout << "Error in computing ephidr: " << ephidrerr << "\n";
-
-        std::cout << "Error in computing ethetadtheta: " << ethetadthetaerr << "\n";
-        std::cout << "Error in computing ethetadphi: " << ethetadphierr << "\n";
-        std::cout << "Error in computing ethetadr: " << ethetadrerr << "\n";
-
-        std::cout << "Error in computing erdtheta: " << erdthetaerr << "\n";
-        std::cout << "Error in computing erdphi: " << erdphierr << "\n";
-        std::cout << "Error in computing erdr: " << erdrerr << "\n";
-
-    }
+    
 };
 
 
@@ -1167,6 +864,7 @@ class StokesPressureTerm : public SphericalScalarFunction
 {
 private:
 
+
     int m_;
     int n_;
 
@@ -1175,6 +873,30 @@ private:
 
     YReal Yr;
     YImag Yi;
+
+    /**
+     * @brief Coefficient of WReal or WImag in the StokesPressure series.
+     * @param r Radius from a SphereCoord.
+     * @param n Degree of the WReal or WImag term.
+     * @param rhohatW Normalized Fourier coefficient of the associated WReal or WImag function.
+     * @return @f{equation}{
+    g_{n,m}(r) = n r^{-(n+1) }\hat{\rho}_{n,m}^W
+     @f}
+    */
+    inline double g(double r, int n, double rhohatW) const
+    {
+        double m = double(n);
+
+        if (isnan(rhohatW))
+            return 0.0;
+
+        double temp = m / pow(r, n + 1);
+        temp *= rhohatW;
+
+
+
+        return temp;
+    }
 
 public:
 
@@ -1185,23 +907,23 @@ public:
      * @param m The order of the term.
      * @param n The Degree of the term.
     */
-    StokesPressureTerm(const VSHSeries& series, int m, int n)
+    StokesPressureTerm(const VSHSeries& series, int m, int n): Yr( m , n) , Yi( m , n)
     {
-
         m_ = m;
         n_ = n;
+
         Yr = YReal(m, n);
         Yi = YImag(m, n);
-
         rhohatWr = series.terms[n][m].rhohatWr;
         rhohatWi = series.terms[n][m].rhohatWi;
 
     }
 
-    StokesPressureTerm(const StokesPressureTerm& term)
+    StokesPressureTerm(const StokesPressureTerm& term) : Yr( term.m_,term.n_) , Yi( term.m_,term.n_)
     {
         m_ = term.m_;
         n_ = term.n_;
+
         Yr = YReal(m_, n_);
         Yi = YImag(m_, n_);
 
@@ -1213,17 +935,15 @@ public:
     {
         m_ = term.m_;
         n_ = term.n_;
-        Yr = YReal(m_, n_);
-        Yi = YImag(m_, n_);
+        Yr = YReal( m_, n_);
+        Yi = YImag( m_, n_);
+
 
         rhohatWr = term.rhohatWr;
         rhohatWi = term.rhohatWi;
 
         return *this;
     }
-
-    void operator ~(){}
-
     /**
      * @brief Evaluates the term.
      * @return @f$ g_{n,m}(r) \mathfrak{R}(Y_n^m)(\theta , \phi) + g_{n,m}(r) \mathfrak{I}(Y_n^m)(\theta , \phi).@f$
@@ -1237,7 +957,11 @@ public:
         return temp;
     }
 
-    
+    void resetLegendre(int m = 0, int n = 0)
+    {
+        Yr = YReal( m, n);
+        Yi = YImag( m, n);
+    }
 
 };
 
@@ -1260,7 +984,7 @@ public:
      * @param n The number of terms in the sum.
      * @param c The center of the source sphere.
     */
-    StokesPressure(int n , RectCoord c = RectCoord()) : P(&legendrePoly)
+    StokesPressure(int n, RectCoord c = RectCoord()) : P(&legendrePoly)
     {
 
         center = c;
@@ -1275,7 +999,7 @@ public:
      * @param series Series to extract data from.
      * @param n The name.
     */
-    StokesPressure(const VSHSeries& series , std::string n = "") : P(&legendrePoly)
+    StokesPressure(const VSHSeries& series, std::string n = "") : P(&legendrePoly)
     {
         name = n;
         center = series.center;
@@ -1298,29 +1022,19 @@ public:
     */
     StokesPressure(const StokesPressure& p): P(&legendrePoly)
     {
+        center = p.center;
+        
+
         terms = p.terms;
-        center = p.center;
+
         for (int n = 0; n < terms.size(); n++)
             for (int m = 0; m <= n; m++)
+            {
                 append(&terms[n][m]);
-
-
+            }
     }
 
-    /**
-     * @brief Move Copy Constructor.
-     * @param p the pressure to copy.
-    */
-    StokesPressure(StokesPressure&& p) noexcept: P(&legendrePoly)
-    {
-        terms = std::move(p.terms);
-        center = p.center;
-        for (int n = 0; n < terms.size(); n++)
-            for (int m = 0; m <= n; m++)
-                append(&terms[n][m]);
-
-
-    }
+    
 
     /**
      * @brief Assignment operator
@@ -1342,27 +1056,7 @@ public:
         return *this;
     }
 
-    /**
-     * @brief Move assignment operator
-     * @param p the pressure to copy
-     * @return the
-    */
-    StokesPressure& operator =(StokesPressure&& p) noexcept
-    {
-        terms = std::move(p.terms);
-        center = p.center;
-        clear();
-
-        for (int n = 0; n < terms.size(); n++)
-            for (int m = 0; m <= n; m++)
-                append(&terms[n][m]);
-
-
-
-        return *this;
-    }
-
-    void operator ~() { }
+    
 
     /**
      * @brief solves for pressure from series data.
@@ -1391,9 +1085,9 @@ public:
      * @param N maximum degree.
      * @param center center of the spherical coordinate system.
     */
-    void solve(SphericalVectorField* rho, int N, RectCoord center = RectCoord())
+    void solve(SphericalVectorField* rho, MathConstants* consts, int N, RectCoord center = RectCoord())
     {
-        VSHSeries series(N,  center);
+        VSHSeries series(N, consts , center);
         series.approximate(rho);
 
         solve(series);
@@ -1442,6 +1136,7 @@ private:
 
     RectCoord center;
     SphericalVectorField* u;
+    MathConstants* consts;
 
    Matrix<3, 3> Kernel(const SphereCoord & x, const SphereCoord &y) const
    {
@@ -1457,7 +1152,7 @@ private:
            {
                //formula for the i,jth entry of the stokeslet
                temp[i][j] = (double)(i ==j)/ R + r[i] * r[j] / (R * R * R);
-               temp[i][j] /= 8.0 * PI;
+               temp[i][j] /= 8.0 * consts->PI;
            }
 
        return temp;
@@ -1470,11 +1165,12 @@ public:
      * @param c The center of the sphere to integrate over.
      * @param na the name.
     */
-    SingleLayerDirect(SphericalVectorField *rho, RectCoord c = RectCoord(), std::string na = "Direct Single Layer")
+    SingleLayerDirect(SphericalVectorField *rho,MathConstants* cts, RectCoord c = RectCoord(), std::string na = "Direct Single Layer")
     {
         u = rho;
         name = na;
         center = c;
+        consts = cts;
     }
 
     /**
@@ -1488,15 +1184,15 @@ public:
 
         vec<3> total = 0.0;
         //loop over trapezoidal(outside) and legendre(inside) nodes.
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMGLNODES; i++)
+        for (int p = 0; p < consts->NUMTRAPNODES; p++)
+            for (int i = 0; i < consts->NUMGLNODES; i++)
             {
                 //generate point on unit sphere, note theta is the first argument, phi the second.
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1) , 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+                SurfaceCoord s(consts->PI / 2.0 * (consts->GLnodes[i] + 1) , 2.0 * consts->PI * (double)p / (double)consts->NUMTRAPNODES);
                 //convert to spherical coordinate.
                 SphereCoord y(s , center);
                 //add contribution at y to integral.
-                total = total +  dot(Kernel(x , y), RecttoVec((*u)(y))) *sin(s.theta) * GLweights[i] * (PI / NUMTRAPNODES) * PI;
+                total = total +  dot(Kernel(x , y), RecttoVec((*u)(y))) *sin(s.theta) * consts->GLweights[i] * (consts->PI / consts->NUMTRAPNODES) * consts->PI;
             }
 
         return VectoRect(total);
@@ -1512,6 +1208,7 @@ private:
 
     RectCoord center;
     SphereData* data;
+    MathConstants* consts;
 
     Matrix<3, 3> Kernel(const SphereCoord& x, const SphereCoord& y) const
     {
@@ -1527,7 +1224,7 @@ private:
             {
                 //formula for the i,jth entry of the stokeslet
                 temp[i][j] = (double)(i == j) / R + r[i] * r[j] / (R * R * R);
-                temp[i][j] /= 8.0 * PI;
+                temp[i][j] /= 8.0 * consts->PI;
             }
 
         return temp;
@@ -1540,11 +1237,12 @@ public:
      * @param c The center of the sphere to integrate over.
      * @param na the name.
     */
-    SingleLayerDirectDiscrete(SphereData* d, RectCoord c = RectCoord(), std::string na = "Direct Single Layer Discrete")
+    SingleLayerDirectDiscrete(SphereData* d, MathConstants* cts, RectCoord c = RectCoord(), std::string na = "Direct Single Layer Discrete")
     {
         data = d;
         name = na;
         center = c;
+        consts = cts;
     }
 
     /**
@@ -1558,15 +1256,15 @@ public:
 
         vec<3> total = 0.0;
         //loop over trapezoidal(outside) and legendre(inside) nodes.
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMGLNODES; i++)
+        for (int p = 0; p < consts->NUMTRAPNODES; p++)
+            for (int i = 0; i < consts->NUMGLNODES; i++)
             {
                 //generate point on unit sphere, note theta is the first argument, phi the second.
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+                SurfaceCoord s(consts->PI / 2.0 * (consts->GLnodes[i] + 1), 2.0 * consts->PI * (double)p / (double)consts->NUMTRAPNODES);
                 //convert to spherical coordinate.
                 SphereCoord y(s, center);
                 //add contribution at y to integral.
-                total = total + dot(Kernel(x, y), RecttoVec((*data)[i][p])) * sin(s.theta) * GLweights[i] * (PI / NUMTRAPNODES) * PI;
+                total = total + dot(Kernel(x, y), RecttoVec((*data)[i][p])) * sin(s.theta) * consts->GLweights[i] * (consts->PI / consts->NUMTRAPNODES) * consts->PI;
             }
 
         return VectoRect(total);
@@ -1582,6 +1280,7 @@ class StokesTractionDirect : public SphericalVectorField
 private:
 
     SphericalVectorField* u;
+    MathConstants* consts;
     RectCoord center;
 
     Matrix<3, 3> Kernel(const SphereCoord & x,const SphereCoord &y) const
@@ -1599,7 +1298,7 @@ private:
             {
                 //formula for the i,jth entry of the stokeslet
                 temp[i][j] = r[i] * r[j] * rn / pow(R , 5);
-                temp[i][j] *= - 0.75 / PI;
+                temp[i][j] *= - 0.75 / consts->PI;
             }
 
         return temp;
@@ -1612,11 +1311,12 @@ public:
      * @param c The center of the spherical coordinate system of the boundary integral.
      * @param na the name.
     */
-    StokesTractionDirect(SphericalVectorField* rho,  RectCoord c = RectCoord(), std::string na = "Traction Direct")
+    StokesTractionDirect(SphericalVectorField* rho,MathConstants* cts,  RectCoord c = RectCoord(), std::string na = "Traction Direct")
     {
         u = rho;
         name = na;
         center = c;
+        consts = cts;
     }
 
     /**
@@ -1629,15 +1329,15 @@ public:
 
         vec<3> total = 0.0;
         //loop over trapezoidal(outside) and legendre(inside) nodes.
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMGLNODES; i++)
+        for (int p = 0; p < consts->NUMTRAPNODES; p++)
+            for (int i = 0; i < consts->NUMGLNODES; i++)
             {
                 //generate point on unit sphere, note theta is the first argument, phi the second.
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+                SurfaceCoord s(consts->PI / 2.0 * (consts->GLnodes[i] + 1), 2.0 * consts->PI * (double)p / (double)consts->NUMTRAPNODES);
                 //convert to spherical coordinate.
                 SphereCoord y(s , center);
                 //add contribution at y to integral.
-                total = total + dot(Kernel(x, y), RecttoVec((*u)(y))) * sin(s.theta) * GLweights[i] * (PI / NUMTRAPNODES) * PI;
+                total = total + dot(Kernel(x, y), RecttoVec((*u)(y))) * sin(s.theta) * consts->GLweights[i] * (consts->PI / consts->NUMTRAPNODES) * consts->PI;
                 if (isnan(total[0]) || isnan(total[1]) || isnan(total[2]))
                 {
                     std::cout << "nan detected from function " << name << " at " << y <<"\n";
@@ -1657,6 +1357,7 @@ class StokesTractionDirectDiscrete : public SphericalVectorField
 private:
 
     SphereData* data;
+    MathConstants* consts;
     RectCoord center;
 
     Matrix<3, 3> Kernel(const SphereCoord& x, const SphereCoord& y) const
@@ -1674,7 +1375,7 @@ private:
             {
                 //formula for the i,jth entry of the stokeslet
                 temp[i][j] = r[i] * r[j] * rn / pow(R, 5);
-                temp[i][j] *= -0.75 / PI;
+                temp[i][j] *= -0.75 / consts->PI;
             }
 
         return temp;
@@ -1687,11 +1388,12 @@ public:
      * @param c The center of the spherical coordinate system of the boundary integral.
      * @param na the name.
     */
-    StokesTractionDirectDiscrete(SphereData* d, RectCoord c = RectCoord(), std::string na = "Traction Direct Discrete")
+    StokesTractionDirectDiscrete(SphereData* d,MathConstants* cts, RectCoord c = RectCoord(), std::string na = "Traction Direct Discrete")
     {
         data = d;
         name = na;
         center = c;
+        consts = cts;
     }
 
     /**
@@ -1704,15 +1406,15 @@ public:
 
         vec<3> total = 0.0;
         //loop over trapezoidal(outside) and legendre(inside) nodes.
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMGLNODES; i++)
+        for (int p = 0; p < consts->NUMTRAPNODES; p++)
+            for (int i = 0; i < consts->NUMGLNODES; i++)
             {
                 //generate point on unit sphere, note theta is the first argument, phi the second.
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+                SurfaceCoord s(consts->PI / 2.0 * (consts->GLnodes[i] + 1), 2.0 * consts->PI * (double)p / (double)consts->NUMTRAPNODES);
                 //convert to spherical coordinate.
                 SphereCoord y(s, center);
                 //add contribution at y to integral.
-                total = total + dot(Kernel(x, y), RecttoVec((*data)[i][p])) * sin(s.theta) * GLweights[i] * (PI / NUMTRAPNODES) * PI;
+                total = total + dot(Kernel(x, y), RecttoVec((*data)[i][p])) * sin(s.theta) * consts->GLweights[i] * (consts->PI / consts->NUMTRAPNODES) * consts->PI;
                 if (isnan(total[0]) || isnan(total[1]) || isnan(total[2]))
                 {
                     std::cout << "nan detected from function " << name << " at " << y << "\n";

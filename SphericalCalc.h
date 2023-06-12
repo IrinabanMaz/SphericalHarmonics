@@ -22,64 +22,9 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include "Constants.h"
 
-
-
-const int MAXTRAPNODES = 64;
-const int MAXGLNODES = 64;
-
-double GLnodes[MAXGLNODES] = {-0.0950125098376374  , 0.0950125098376374  , -0.2816035507792589 , 0.2816035507792589 ,  -0.4580167776572274  , 0.4580167776572274,
-                          -0.6178762444026438  , 0.6178762444026438 , -0.7554044083550030 , 0.7554044083550030 , -0.8656312023878318 , 0.8656312023878318  ,
-                          -0.9445750230732326 , 0.9445750230732326  , -0.9894009349916499  , 0.9894009349916499 };
-
-    
-
-/*double GLnodes[MAXGLNODES] = {-0.0483076656877383, 0.0483076656877383,
-                             -0.1444719615827965, 0.1444719615827965,
-                             -0.2392873622521371, 0.2392873622521371,
-                             -0.3318686022821277, 0.3318686022821277,
-                             -0.4213512761306353, 0.4213512761306353,
-                             -0.5068999089322294, 0.5068999089322294,
-                             -0.5877157572407623, 0.5877157572407623,
-                             -0.6630442669302152, 0.6630442669302152,
-                             -0.7321821187402897, 0.7321821187402897,
-                             -0.7944837959679424, 0.7944837959679424,
-                             -0.8493676137325700, 0.8493676137325700,
-                             -0.8963211557660521, 0.8963211557660521,
-                             -0.9349060759377397, 0.9349060759377397,
-                             -0.9647622555875064, 0.9647622555875064,
-                             -0.9856115115452684, 0.9856115115452684,
-                             -0.9972638618494816, 0.9972638618494816 };
- */                            
-
-double GLweights[MAXGLNODES] = { 0.1894506104550685 , 0.1894506104550685 , 0.1826034150449236  , 0.1826034150449236  , 0.1691565193950025  , 0.1691565193950025 ,
-                        0.1495959888165767  , 0.1495959888165767 , 0.1246289712555339  , 0.1246289712555339  , 0.0951585116824928  , 0.0951585116824928 ,
-                        0.0622535239386479  , 0.0622535239386479 , 0.0271524594117541  , 0.0271524594117541 };
-                        
-
-/*
-double GLweights[MAXGLNODES] = { 0.0965400885147278 , 0.0965400885147278,
-                               0.0956387200792749 , 0.0956387200792749,
-                               0.0938443990808046 , 0.0938443990808046,
-                               0.0911738786957639 , 0.0911738786957639,
-                               0.0876520930044038 , 0.0876520930044038,
-                               0.0833119242269467 , 0.0833119242269467,
-                               0.0781938957870703 , 0.0781938957870703,
-                               0.0723457941088485 , 0.0723457941088485,
-                               0.0658222227763618 , 0.0658222227763618,
-                               0.0586840934785355 , 0.0586840934785355,
-                               0.0509980592623762 , 0.0509980592623762,
-                               0.0428358980222267 , 0.0428358980222267,
-                               0.0342738629130214 , 0.0342738629130214,
-                               0.0253920653092621 , 0.0253920653092621,
-                               0.0162743947309057 , 0.0162743947309057,
-                               0.0070186100094701 , 0.0070186100094701 };
-  */                             
-
-double NUMGLNODES = 16;
-double NUMTRAPNODES = 16;
-
-const double PI = 4.0 * atan(1.0);
+const MathConstants  defaultconsts(8, 8);
 
 /**
  * @brief Struct representing a point on the surface of a sphere in spherical coordinates.
@@ -97,24 +42,24 @@ struct SurfaceCoord
      * @param s2 The second point.
      * @return A SurfaceCoord whose zenith and azimuth are the sums of the passed arguments, modulo the sphere's surface. 
     */
-    SurfaceCoord operator +(const SurfaceCoord & s2) const
+    inline SurfaceCoord operator +(const SurfaceCoord & s2) const
     {
         SurfaceCoord temp;
         temp.phi = phi + s2.phi;
         temp.theta = theta + s2.theta;
 
 
-        while (temp.theta > 2.0 * PI)
-            temp.theta -= 2.0 * PI;
+        while (temp.theta > 2.0 * defaultconsts.PI)
+            temp.theta -= 2.0 * defaultconsts.PI;
 
-        if (temp.theta > PI)
+        if (temp.theta > defaultconsts.PI)
         {
-            temp.theta = 2.0 * PI - temp.theta;
-            temp.phi += PI;
+            temp.theta = 2.0 * defaultconsts.PI - temp.theta;
+            temp.phi += defaultconsts.PI;
         }
 
-        while (temp.phi > 2.0 * PI)
-            temp.phi -= 2.0 * PI;
+        while (temp.phi > 2.0 * defaultconsts.PI)
+            temp.phi -= 2.0 * defaultconsts.PI;
             
 
         return temp;
@@ -125,27 +70,27 @@ struct SurfaceCoord
      * @param s2 The second point.
      * @return A SurfaceCoord whose zenith and azimuth are the sums of the passed arguments, modulo the sphere's surface.
     */
-    SurfaceCoord operator -(const SurfaceCoord & s2) const
+    inline SurfaceCoord operator -(const SurfaceCoord & s2) const
     {
         SurfaceCoord temp;
         temp.phi = phi - s2.phi;
         temp.theta = theta - s2.theta;
 
 
-        while (temp.theta < - PI)
-            temp.theta += 2.0 * PI;
+        while (temp.theta < -defaultconsts.PI)
+            temp.theta += 2.0 * defaultconsts.PI;
 
         if (temp.theta < 0.0)
         {
             temp.theta = - temp.theta;
-            temp.phi += PI;
+            temp.phi += defaultconsts.PI;
         }
 
-        while (temp.phi > 2.0 * PI)
-            temp.phi -= 2.0 * PI;
+        while (temp.phi > 2.0 * defaultconsts.PI)
+            temp.phi -= 2.0 * defaultconsts.PI;
 
         while (temp.phi < 0.0)
-            temp.phi += 2.0 * PI;
+            temp.phi += 2.0 * defaultconsts.PI;
 
         return temp;
     }
@@ -199,7 +144,7 @@ struct RectCoord
 /**
  * @brief Addition for two RectCoord points.
 */
-RectCoord operator +(const RectCoord& a,const RectCoord & b)
+inline RectCoord operator +(const RectCoord& a,const RectCoord & b)
 {
     return RectCoord(a.x + b.x, a.y + b.y, a.z + b.z);
 }
@@ -207,12 +152,12 @@ RectCoord operator +(const RectCoord& a,const RectCoord & b)
 /**
  * @brief Subtraction for two RectCoord points.
 */
-RectCoord operator -(const RectCoord & a,const RectCoord& b)
+inline RectCoord operator -(const RectCoord & a,const RectCoord& b)
 {
     return RectCoord(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
-RectCoord operator -(const RectCoord& a)
+inline RectCoord operator -(const RectCoord& a)
 {
     return RectCoord(-a.x, -a.y, -a.z);
 }
@@ -220,40 +165,40 @@ RectCoord operator -(const RectCoord& a)
 /**
  * @brief Scalar multiplication for RectCoord.
 */
-RectCoord operator *(double c, RectCoord a)
+inline RectCoord operator *(double c, RectCoord a)
 {
     return RectCoord(c * a.x, c * a.y, c * a.z);
 }
 /**
  * @brief Scalar multiplication for RectCoord.
 */
-RectCoord operator *(RectCoord a , double c)
+inline RectCoord operator *(RectCoord a , double c)
 {
     return RectCoord(c * a.x, c * a.y, c * a.z);
 }
 
-RectCoord operator / (RectCoord x, double a)
+inline RectCoord operator / (RectCoord x, double a)
 {
     return RectCoord(x.x / a, x.y / a, x.z / a);
 }
-RectCoord operator +=(RectCoord & x, const RectCoord& y)
+RectCoord & operator +=(RectCoord & x, const RectCoord& y)
 {
     x = x + y;
     return x;
 }
-RectCoord operator -=(RectCoord& x,const RectCoord& y)
+inline RectCoord & operator -=(RectCoord& x,const RectCoord& y)
 {
     x = x - y;
     return x;
 }
 
-RectCoord operator *=(RectCoord & x,const double &  a)
+inline RectCoord & operator *=(RectCoord & x,const double &  a)
 {
     x = x * a;
     return x;
 }
 
-RectCoord operator /=(RectCoord & x, const double & a)
+inline RectCoord & operator /=(RectCoord & x, const double & a)
 {
     x = x / a;
     return x;
@@ -264,7 +209,7 @@ RectCoord operator /=(RectCoord & x, const double & a)
 /**
  * @brief dot product for rectangular coordinates.
 */
-double dot(RectCoord a, RectCoord b)
+inline double dot(RectCoord a, RectCoord b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
@@ -272,7 +217,7 @@ double dot(RectCoord a, RectCoord b)
 /**
  * @brief Vector cross product.
 */
-RectCoord cross(RectCoord a, RectCoord b)
+inline RectCoord cross(RectCoord a, RectCoord b)
 {
     RectCoord temp;
     temp.x = a.y * b.z - a.z * b.y;
@@ -285,7 +230,7 @@ RectCoord cross(RectCoord a, RectCoord b)
 /**
  * @brief Length of a RectCoord.
 */
-double norm(const RectCoord & x)
+inline double norm(const RectCoord & x)
 {
     return sqrt(dot(x, x));
 }
@@ -295,12 +240,12 @@ double norm(const RectCoord & x)
  * 
  * Output will be of the form [x, y, z].
 */
-std::ostream& operator <<(std::ostream& o, RectCoord x)
+inline std::ostream& operator <<(std::ostream& o, RectCoord x)
 {
     o << "[" << x.x << ", " << x.y << ", " << x.z << "]";
     return o;
 }
-bool operator ==(RectCoord x, RectCoord y)
+inline bool operator ==(RectCoord x, RectCoord y)
 {
     return norm(x - y) <= 1e-15;
 }
@@ -314,7 +259,7 @@ bool operator ==(RectCoord x, RectCoord y)
  * The rotation is computed via Rodriguez formula, where @f$ k @f$ is the axis and @f$\theta @f$ is the angle.
  * @f$ v_\mbox{rot} = v \cos\theta + (k \times v)\sin\theta + k(k\cdot v)(1 - \cos\theta)@f$.
 */
-RectCoord rotate(RectCoord v, RectCoord axis, double angle)
+inline RectCoord rotate(const RectCoord & v,const RectCoord & axis,const double & angle)
 {
     return v * cos(angle) + cross(axis, v) * sin(angle) + axis * dot(axis, v)*(1.0 - cos(angle));
 }
@@ -337,7 +282,7 @@ struct SphereCoord
      * @param c center of the coordinate system, optional and defaults to origin.
      * @param r radius of the coordinate system, optional and defaults to 1.
     */
-    SphereCoord(double rh = 0.0, SurfaceCoord s1  = SurfaceCoord(), RectCoord c = RectCoord(),SurfaceCoord axis = SurfaceCoord(), double r = 1.0)
+    SphereCoord(const double& rh = 0.0,const SurfaceCoord& s1  = SurfaceCoord(),const RectCoord& c = RectCoord(),const SurfaceCoord & axis = SurfaceCoord(), const double & r = 1.0)
     {
         rho = rh;
         s = s1;
@@ -348,7 +293,7 @@ struct SphereCoord
     /**
      * @brief Constructor with unit point radius.
     */
-    SphereCoord(SurfaceCoord s1, RectCoord c = RectCoord(), SurfaceCoord axis = SurfaceCoord(), double r = 1.0)
+    SphereCoord(const SurfaceCoord & s1,const RectCoord& c = RectCoord(),const SurfaceCoord& axis = SurfaceCoord(),const double& r = 1.0)
     {
         rho = 1;
         s = s1;
@@ -364,7 +309,7 @@ struct SphereCoord
  * 
  * Output will be of the form @f$(\rho, \theta, \phi)@f$. Information about the coordinate system is not printed.
 */
-std::ostream & operator <<(std::ostream &  o, SphereCoord s)
+inline std::ostream & operator <<(std::ostream &  o, SphereCoord s)
 {
     o << "( " << s.rho << ", " << s.s.theta << ", " << s.s.phi <<")";
     return o;
@@ -385,7 +330,7 @@ std::ostream & operator <<(std::ostream &  o, SphereCoord s)
   \phi &=& \mbox{atan2}(\sqrt{(x_1 - c_1)^2 + (x_2 - c_2)^2}, x_3 - c_3) 
   @f}
 */
-SphereCoord RectToSphere(RectCoord x , RectCoord c = RectCoord(), SurfaceCoord axis = SurfaceCoord(), double radius = 1.0)
+inline SphereCoord RectToSphere(const RectCoord & x ,const RectCoord & c = RectCoord(), const SurfaceCoord& axis = SurfaceCoord(), const double & radius = 1.0)
 {
     SphereCoord temp;
 
@@ -422,7 +367,7 @@ SphereCoord RectToSphere(RectCoord x , RectCoord c = RectCoord(), SurfaceCoord a
 *  Then apply the scaling and translation to account for the properties of the 
 *  given coordinate system to yield @f$ \mbox{radius} \cdot s + \mbox{center}@f$
 */
-RectCoord SphereToRect(SphereCoord r)
+inline RectCoord SphereToRect(const SphereCoord & r)
 {
     RectCoord temp;
     temp.x = r.rho * sin(r.s.theta) * cos(r.s.phi);
@@ -436,11 +381,11 @@ RectCoord SphereToRect(SphereCoord r)
 
     return temp;
 }
-SurfaceCoord RectToSurface(RectCoord x)
+inline SurfaceCoord RectToSurface(const RectCoord & x)
 {
     return RectToSphere(x).s;
 }
-RectCoord SurfaceToRect(SurfaceCoord s)
+inline RectCoord SurfaceToRect(const SurfaceCoord & s)
 {
     SphereCoord temp(1, s);
     return SphereToRect(temp);
@@ -453,7 +398,7 @@ RectCoord SurfaceToRect(SurfaceCoord s)
  * @param r the new radius.
  * @return The converted point.
 */
-SphereCoord recenter(SphereCoord x, RectCoord c = RectCoord(),SurfaceCoord axis = SurfaceCoord(), double r = 1.0)
+inline SphereCoord recenter(const SphereCoord & x, const RectCoord & c = RectCoord(),const SurfaceCoord & axis = SurfaceCoord(),const double & r = 1.0)
 {
     return RectToSphere(SphereToRect(x), c,axis ,r);
 }
@@ -461,7 +406,7 @@ SphereCoord recenter(SphereCoord x, RectCoord c = RectCoord(),SurfaceCoord axis 
 /**
  * @brief Adds two points in spherical coordinate systems. The sum is equivalent to summing their RectCoord equivalents.
 */
-RectCoord operator +(const SphereCoord & r, const SphereCoord& q)
+inline RectCoord operator +(const SphereCoord & r, const SphereCoord& q)
 {
     return SphereToRect(r) + SphereToRect(q) ;
 }
@@ -469,7 +414,7 @@ RectCoord operator +(const SphereCoord & r, const SphereCoord& q)
 /**
  * @brief Subtracts two points in spherical coordinate systems. The difference is equivalent to subtracting their RectCoord equivalents.
 */
-RectCoord operator -(const SphereCoord & r, const SphereCoord & q)
+inline RectCoord operator -(const SphereCoord & r, const SphereCoord & q)
 {
     return SphereToRect(r) - SphereToRect(q);
 }
@@ -477,7 +422,7 @@ RectCoord operator -(const SphereCoord & r, const SphereCoord & q)
 /**
  * @brief Subtracts two pointS. The difference is equivalent to subtracting their RectCoord equivalents.
 */
-RectCoord operator -(const SphereCoord& r, const RectCoord& q)
+inline RectCoord operator -(const SphereCoord& r, const RectCoord& q)
 {
     return SphereToRect(r) - q;
 }
@@ -485,7 +430,7 @@ RectCoord operator -(const SphereCoord& r, const RectCoord& q)
 /**
  * @brief Subtracts two points. The difference is equivalent to subtracting their RectCoord equivalents.
 */
-RectCoord operator -(const RectCoord& r, const SphereCoord& q)
+inline RectCoord operator -(const RectCoord& r, const SphereCoord& q)
 {
     return r - SphereToRect(q);
 }
@@ -493,14 +438,14 @@ RectCoord operator -(const RectCoord& r, const SphereCoord& q)
 /**
  * @brief Adds a RectCoord to a SphereCoord. The sum is equivalent to summing their RectCoord equivalents.
 */
-RectCoord operator +(const RectCoord & x,const SphereCoord & s)
+inline RectCoord operator +(const RectCoord & x,const SphereCoord & s)
 {
     return x + SphereToRect(s);
 }
 /**
  * @brief Adds a RectCoord to a SphereCoord. The sum is equivalent to summing their RectCoord equivalents.
 */
-RectCoord operator +(const SphereCoord & s, const RectCoord & x )
+inline RectCoord operator +(const SphereCoord & s, const RectCoord & x )
 {
     return x + SphereToRect(s);
 }
@@ -508,7 +453,7 @@ RectCoord operator +(const SphereCoord & s, const RectCoord & x )
 /**
  * @brief Scales a SphereCoord.
 */
-SphereCoord operator *(const double & a, const SphereCoord & x)
+inline SphereCoord operator *(const double & a, const SphereCoord & x)
 {
     return RectToSphere(a * SphereToRect(x) , x.center , x.northPole,x.radius);
 }
@@ -516,7 +461,7 @@ SphereCoord operator *(const double & a, const SphereCoord & x)
 /**
  * @brief Scales a SphereCoord.
 */
-SphereCoord operator *(const SphereCoord & x,const double & a)
+inline SphereCoord operator *(const SphereCoord & x,const double & a)
 {
     return RectToSphere(a * SphereToRect(x) , x.center , x.northPole,x.radius);
 }
@@ -524,7 +469,7 @@ SphereCoord operator *(const SphereCoord & x,const double & a)
 /**
  * @brief Computes the dot product of two SphereCoord objects. The sum is equivalent to summing their RectCoord equivalents.
 */
-double dot(const SphereCoord & x,const SphereCoord & y)
+inline double dot(const SphereCoord & x,const SphereCoord & y)
 {
     return dot(SphereToRect(x), SphereToRect(y));
 }
@@ -532,7 +477,7 @@ double dot(const SphereCoord & x,const SphereCoord & y)
 /**
  * @brief Computes the cross product of two SphereCoord objects. The sum is equivalent to summing their RectCoord equivalents.
 */
-RectCoord cross(const SphereCoord & x,const SphereCoord & y)
+inline RectCoord cross(const SphereCoord & x,const SphereCoord & y)
 {
     return cross(SphereToRect(x), SphereToRect(y));
 }
@@ -540,7 +485,7 @@ RectCoord cross(const SphereCoord & x,const SphereCoord & y)
 /**
  * @brief computes the norm of a SphereCoord in the eulerian description.
 */
-double norm(const SphereCoord & x)
+inline double norm(const SphereCoord & x)
 {
     RectCoord temp = SphereToRect(x);
     return sqrt(dot(temp , temp));
@@ -551,7 +496,7 @@ double norm(const SphereCoord & x)
  * 
  * We ue the formula @f$ e_r(x) = \frac{x}{ r} @f$
 */
-RectCoord e_r(const SphereCoord & x)
+inline RectCoord e_r(const SphereCoord & x)
 {
     RectCoord r =x - x.center;
     return r / norm(r);
@@ -563,7 +508,7 @@ RectCoord e_r(const SphereCoord & x)
  *
  * We ue the formula @f$ e_\phi(x) = [ -\sin\phi , \cos\phi , 0] @f$
 */
-RectCoord e_phi(const SphereCoord & x)
+inline RectCoord e_phi(const SphereCoord & x)
 {
     RectCoord temp = RectCoord(-sin(x.s.phi), cos(x.s.phi), 0);
     RectCoord ephiPole = RectCoord(-sin(x.northPole.phi), cos(x.northPole.phi), 0.0);
@@ -576,7 +521,7 @@ RectCoord e_phi(const SphereCoord & x)
  *
  * We ue the formula @f$ e_\phi(x) = [ \cos\theta \cos\phi , \cos\theta \sin\phi , -\sin\theta] @f$
 */
-RectCoord e_theta(const SphereCoord & x)
+inline RectCoord e_theta(const SphereCoord & x)
 {
     RectCoord temp = RectCoord(cos(x.s.theta) * cos(x.s.phi), cos(x.s.theta) * sin(x.s.phi), -sin(x.s.theta));
     RectCoord ephiPole = RectCoord(-sin(x.northPole.phi), cos(x.northPole.phi), 0.0);
@@ -626,6 +571,8 @@ public:
             return RAN();
     }
 
+    virtual void operator ~(){}
+
 };
 
 
@@ -655,7 +602,7 @@ typedef Functor<SurfaceCoord, double> SurfaceScalarFunction;
   @f}
   * and the same numerical scheme is used for @f$ \frac{\partial}{\partial \phi}. @f$
 */
-SphereCoord surfaceGrad(SurfaceScalarFunction* u, SurfaceCoord s, double stepsize)
+SphereCoord surfaceGrad(SurfaceScalarFunction* u,const SurfaceCoord & s,const double & stepsize)
 { 
     
     //Construct unit vectors.
@@ -760,6 +707,8 @@ public:
 
         return temp;
     }
+
+    virtual void operator ~() {}
 };
 
 typedef FunctorSum<SphereCoord, double>       SphereScalFunctionSum;
@@ -774,19 +723,19 @@ typedef FunctorSum<SphereCoord, RectCoord>  VectorFieldSum;
  * @param debugOut Determines whether messages will print when a pointwise large error occurs.
  * @return The integral @f$\left(\int_\Gamma |f_1(x) - f_2(x)|^2 dS_x\right)^{1/2} @f$
 */
-double L2Difference(SphericalScalarFunction* f1, SphericalScalarFunction* f2, double radius = 1.0 , RectCoord center = RectCoord() , bool debugOut = false)
+double L2Difference(SphericalScalarFunction* f1, SphericalScalarFunction* f2, double radius = 1.0 , RectCoord center = RectCoord() ,const MathConstants & consts = defaultconsts,bool debugOut = false)
 {
    
     double total = 0;
-for (int i = 0; i < NUMGLNODES; i++)
-    for (int p = 0; p < NUMTRAPNODES; p++) 
+for (int i = 0; i < consts.NUMGLNODES; i++)
+    for (int p = 0; p < consts.NUMTRAPNODES; p++) 
         {
-            SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+            SurfaceCoord s(consts.PI / 2.0 * (consts.GLnodes[i] + 1), 2.0 * consts.PI * (double)p / (double)consts.NUMTRAPNODES);
             SphereCoord x(radius, s , center);
             double f = (*f1)(x);
             double g = (*f2)(x);
             double diff =  f - g ;
-            total += radius * radius * sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
+            total += radius * radius * sin(s.theta) * consts.GLweights[i] * diff * diff * (consts.PI / consts.NUMTRAPNODES) * consts.PI;
             if ((abs(diff) > 1e-4)&&debugOut)
             {
                 std::cout << "Large error between " << f1->name << " and " << f2->name << std::endl;
@@ -808,17 +757,17 @@ for (int i = 0; i < NUMGLNODES; i++)
  * @param debugOut Determines whether messages will print when a pointwise large error occurs.
  * @return The integral @f$\int_\Gamma f_1(x) \cdot f_2(x) dS_x @f$
 */
-double L2InnerProduct(SphericalVectorField* f1, SphericalVectorField* f2,  RectCoord c = RectCoord())
+double L2InnerProduct(SphericalVectorField* f1, SphericalVectorField* f2,  RectCoord c = RectCoord() , const MathConstants&  consts = defaultconsts)
 {  
 
     double total = 0;
 
-    for (int p = 0; p < NUMTRAPNODES; p++)
-        for (int i = 0; i < NUMGLNODES; i++)
+    for (int p = 0; p < consts.NUMTRAPNODES; p++)
+        for (int i = 0; i < consts.NUMGLNODES; i++)
         {
-            SurfaceCoord s( PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+            SurfaceCoord s( consts.PI / 2.0 * (consts.GLnodes[i] + 1), 2.0 * consts.PI * (double)p / (double)consts.NUMTRAPNODES);
             SphereCoord x(s , c);
-            total += sin(s.theta) * GLweights[i] * dot((*f1)(x), (*f2)(x)) *  (PI / NUMTRAPNODES) * PI;
+            total += sin(s.theta) * consts.GLweights[i] * dot((*f1)(x), (*f2)(x)) *  (consts.PI / consts.NUMTRAPNODES) * consts.PI;
         }
 
     return total;
@@ -829,17 +778,17 @@ double L2InnerProduct(SphericalVectorField* f1, SphericalVectorField* f2,  RectC
  * @param debugOut Determines whether messages will print when a pointwise large error occurs.
  * @return The integral @f$\int_\Gamma f_1(x) \cdot f_2(x) dS_x @f$
 */
-double L2InnerProduct(SphericalScalarFunction* f1, SphericalScalarFunction* f2, RectCoord c = RectCoord())
+double L2InnerProduct(SphericalScalarFunction* f1, SphericalScalarFunction* f2, RectCoord c = RectCoord(), MathConstants consts = defaultconsts)
 {
 
     double total = 0;
 
-    for (int p = 0; p < NUMTRAPNODES; p++)
-        for (int i = 0; i < NUMGLNODES; i++)
+    for (int p = 0; p < consts.NUMTRAPNODES; p++)
+        for (int i = 0; i < consts.NUMGLNODES; i++)
         {
-            SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+            SurfaceCoord s(consts.PI / 2.0 * (consts.GLnodes[i] + 1), 2.0 * consts.PI * (double)p / (double)consts.NUMTRAPNODES);
             SphereCoord x(s, c);
-            total += sin(s.theta) * GLweights[i] * (*f1)(x) * (*f2)(x) * (PI / NUMTRAPNODES) * PI;
+            total += sin(s.theta) * consts.GLweights[i] * (*f1)(x) * (*f2)(x) * (consts.PI / consts.NUMTRAPNODES) * consts.PI;
         }
 
     return total;
@@ -850,58 +799,119 @@ double L2InnerProduct(SphericalScalarFunction* f1, SphericalScalarFunction* f2, 
 /**
  * @brief Vector storing the discretization of a SphericalVectorField.
 */
-typedef std::vector<std::vector<RectCoord>> SphereData;
+class SphereData
+{
+private:
+    std::vector<std::vector<RectCoord>> data;
+    
+public:
+    SphereData(const int& ntrap = 1, const int& ngl = 1)
+    {
+        data.resize(ngl);
+        for (int t = 0; t < ngl; t++)
+        {
+            data[t].resize(ntrap);
+        }
+    }
 
+    SphereData(const SphereData& d)
+    {
+        data = d.data;
+    }
+
+    SphereData& operator =(const SphereData& d)
+    {
+        data = d.data;
+        return *this;
+    }
+
+    std::vector<RectCoord>& operator[](size_t index)
+    {
+        return data[index];
+    }
+
+    const std::vector<RectCoord>& operator[](size_t index) const
+    {
+        return data[index];
+    }
+
+    size_t size() const
+    {
+        return data.size();
+    }
+
+};
 
 SphereData operator +(const SphereData& a, const SphereData& b)
 {
-    SphereData temp;
-    temp.resize(NUMGLNODES);
+    SphereData temp(a);
+    int NUMGLNODES = a.size();
+    int NUMTRAPNODES = a.size();
     for (int t = 0; t < NUMGLNODES; t++)
-    {
-        temp[t].resize(NUMTRAPNODES);
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            temp[t][p] = a[t][p] + b[t][p];
-    }
+     for (int p = 0; p < NUMTRAPNODES; p++)
+            temp[t][p] += b[t][p];
+    
 
     return temp;
 }
 
 SphereData operator -(const SphereData& a, const SphereData& b)
 {
-    SphereData temp;
-    temp.resize(NUMGLNODES);
+    SphereData temp(a);
+    int NUMGLNODES = a.size();
+    int NUMTRAPNODES = a[0].size();
     for (int t = 0; t < NUMGLNODES; t++)
-    {
-        temp[t].resize(NUMTRAPNODES);
         for (int p = 0; p < NUMTRAPNODES; p++)
-            temp[t][p] = a[t][p] - b[t][p];
-    }
+            temp[t][p] -= b[t][p];
 
+
+    return temp;
     return temp;
 }
 
 /**
  * @brief Vector storing the discretization of a SphericalScalarFunction.
 */
-typedef std::vector<std::vector<double>> ScalSphereData;
+
+struct ScalSphereData : public std::vector<std::vector<double>>
+{
+
+  
+public:
+    ScalSphereData(const int& ntrap, const int& ngl)
+    {
+        resize(ngl);
+        for (int t = 0; t < ngl; t++)
+        {
+            resize(ntrap);
+        }
+    }
+
+};
 
 /**
  * @brief Computes the L2 inner product of a function with a discrete set of data located on the quadrature nodes.
  * @param c center of the sphere to integrate over.
  * @return The integral @f$\int_\Gamma data(x) \cdot f_2(x) dS_x @f$
 */
-double L2InnerProductDiscrete(SphereData& data, SphericalVectorField* f2, RectCoord c = RectCoord())
+double L2InnerProductDiscrete(const SphereData& data, SphericalVectorField* f2, RectCoord c = RectCoord() , MathConstants consts = defaultconsts)
 {
 
     double total = 0;
 
-    for (int p = 0; p < NUMTRAPNODES; p++)
-        for (int i = 0; i < NUMGLNODES; i++)
+    MathConstants temp;
+
+    if (consts.NUMGLNODES != data.size() || consts.NUMTRAPNODES != data[0].size())
+        temp = MathConstants(data[0].size(), data.size());
+    else
+        temp = consts;
+
+    for (int p = 0; p < temp.NUMTRAPNODES; p++)
+        for (int i = 0; i < temp.NUMGLNODES; i++)
         {
-            SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+            SurfaceCoord s(temp.PI / 2.0 * (temp.GLnodes[i] + 1), 2.0 * temp.PI * (double)p / (double)temp.NUMTRAPNODES);
             SphereCoord x(s, c);
-            total += sin(s.theta) * GLweights[i] * dot(data[i][p], (*f2)(x)) * (PI / NUMTRAPNODES) * PI;
+            total += sin(s.theta) * temp.GLweights[i] * dot(data[i][p], (*f2)(x)) * (temp.PI / temp.NUMTRAPNODES) * consts.PI;
         }
 
     return total;
@@ -911,17 +921,24 @@ double L2InnerProductDiscrete(SphereData& data, SphericalVectorField* f2, RectCo
  * @param c center of the sphere to integrate over.
  * @return The integral @f$\int_\Gamma data1(x) \cdot data2(x) dS_x @f$
 */
-double L2InnerProductDiscrete(SphereData& data1, SphereData& data2, RectCoord c = RectCoord())
+double L2InnerProductDiscrete(const SphereData& data1,const SphereData & data2,const RectCoord & c = RectCoord(),const MathConstants & consts = defaultconsts)
 {
 
-    double total = 0;
+    double total = 0.0;
 
-    for (int p = 0; p < NUMTRAPNODES; p++)
-        for (int i = 0; i < NUMGLNODES; i++)
+    MathConstants temp;
+
+    if (consts.NUMGLNODES != data1.size() || consts.NUMTRAPNODES != data1[0].size())
+        temp = MathConstants(data1[0].size(), data1.size());
+    else
+        temp = consts;
+
+    for (int p = 0; p < temp.NUMTRAPNODES; p++)
+        for (int i = 0; i < temp.NUMGLNODES; i++)
         {
-            SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+            SurfaceCoord s(temp.PI / 2.0 * (temp.GLnodes[i] + 1), 2.0 * temp.PI * (double)p / (double)temp.NUMTRAPNODES);
             SphereCoord x(s, c);
-            total += sin(s.theta) * GLweights[i] * dot(data1[i][p], data2[i][p]) * (PI / NUMTRAPNODES) * PI;
+            total += sin(s.theta) * temp.GLweights[i] * dot(data1[i][p], data2[i][p]) * (temp.PI / temp.NUMTRAPNODES) * temp.PI;
         }
 
     return total;
@@ -934,18 +951,19 @@ double L2InnerProductDiscrete(SphereData& data1, SphereData& data2, RectCoord c 
  * @param debugOut Determines whether messages will print when a pointwise large error occurs.
  * @return The integral @f$\left(\int_\Gamma |f_1(x) - f_2(x)|^2 dS_x\right)^{1/2} @f$
 */
-double L2Difference(SphericalVectorField* f1, SphericalVectorField* f2,  double radius = 1, RectCoord center = RectCoord(), bool debugOut = false)
+double L2Difference(SphericalVectorField* f1, SphericalVectorField* f2,  const double & radius = 1,const  RectCoord & center = RectCoord(), const bool & debugOut = false,const MathConstants & consts = defaultconsts)
 {
     
     double total = 0;
 
-    for (int p = 0; p < NUMTRAPNODES; p++)
-        for (int i = 0; i < NUMGLNODES; i++)
+
+    for (int p = 0; p < consts.NUMTRAPNODES; p++)
+        for (int i = 0; i < consts.NUMGLNODES; i++)
         {
-            SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+            SurfaceCoord s(consts.PI / 2.0 * (consts.GLnodes[i] + 1), 2.0 * consts.PI * (double)p / (double)consts.NUMTRAPNODES);
             SphereCoord x(radius , s , center);
             RectCoord diff = (*f1)(x) - (*f2)(x);
-            total += radius * radius * sin(s.theta) * GLweights[i] * dot(diff, diff) * (PI / NUMTRAPNODES) * PI;
+            total += radius * radius * sin(s.theta) * consts.GLweights[i] * dot(diff, diff) * (consts.PI / consts.NUMTRAPNODES) * consts.PI;
             if ((dot(diff, diff) > 1e-4 )|| isnan(dot(diff,diff))&& debugOut)
             {
                 std::cout << " error of " << dot(diff, diff) << " at " << x << std::endl;
@@ -969,17 +987,17 @@ double L2Difference(SphericalVectorField* f1, SphericalVectorField* f2,  double 
  * @param debugOut Determines whether messages will print when a pointwise large error occurs.
  * @return The integral @f$\int_\Gamma f(x) dS_x @f$
 */
-RectCoord Integrate(SphericalVectorField* f, double radius = 1.0, RectCoord center = RectCoord())
+RectCoord Integrate(SphericalVectorField* f, const double & radius = 1.0,const RectCoord & center = RectCoord(), const MathConstants& consts = defaultconsts)
 {
 
     RectCoord total = 0.0;
 
-    for (int p = 0; p < NUMTRAPNODES; p++)
-        for (int i = 0; i < NUMGLNODES; i++)
+    for (int p = 0; p < consts.NUMTRAPNODES; p++)
+        for (int i = 0; i < consts.NUMGLNODES; i++)
         {
-            SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+            SurfaceCoord s(consts.PI / 2.0 * (consts.GLnodes[i] + 1), 2.0 * consts.PI * (double)p / (double)consts.NUMTRAPNODES);
             SphereCoord x(radius, s, center);
-            total =  total + radius * radius * sin(s.theta) * GLweights[i] * ((*f)(x)) * (PI / NUMTRAPNODES) * PI;
+            total =  total + radius * radius * sin(s.theta) * consts.GLweights[i] * ((*f)(x)) * (consts.PI / consts.NUMTRAPNODES) * consts.PI;
             
 
         }
@@ -994,17 +1012,17 @@ RectCoord Integrate(SphericalVectorField* f, double radius = 1.0, RectCoord cent
  * @param debugOut Determines whether messages will print when a pointwise large error occurs.
  * @return The integral @f$\int_\Gamma f(x) dS_x @f$
 */
-double Integrate(SphericalScalarFunction* f, double radius = 1.0, RectCoord center = RectCoord())
+double Integrate(SphericalScalarFunction* f,const double & radius = 1.0,const RectCoord & center = RectCoord(), const MathConstants& consts = defaultconsts)
 {
 
     double total = 0.0;
 
-    for (int p = 0; p < NUMTRAPNODES; p++)
-        for (int i = 0; i < NUMGLNODES; i++)
+    for (int p = 0; p < consts.NUMTRAPNODES; p++)
+        for (int i = 0; i < consts.NUMGLNODES; i++)
         {
-            SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+            SurfaceCoord s(consts.PI / 2.0 * (consts.GLnodes[i] + 1), 2.0 * consts.PI * (double)p / (double)consts.NUMTRAPNODES);
             SphereCoord x(radius, s, center);
-            total = total + radius * radius * sin(s.theta) * GLweights[i] * ((*f)(x)) * (PI / NUMTRAPNODES) * PI;
+            total = total + radius * radius * sin(s.theta) * consts.GLweights[i] * ((*f)(x)) * (consts.PI / consts.NUMTRAPNODES) * consts.PI;
 
 
         }
@@ -1019,17 +1037,24 @@ double Integrate(SphericalScalarFunction* f, double radius = 1.0, RectCoord cent
  * @param debugOut Determines whether messages will print when a pointwise large error occurs.
  * @return The integral @f$\int_\Gamma data(x) dS_x @f$
 */
-RectCoord IntegrateDiscrete(const SphereData& data,  double radius = 1, RectCoord center = RectCoord())
+RectCoord IntegrateDiscrete(const SphereData& data, const double & radius = 1,const RectCoord & center = RectCoord() , const MathConstants& consts = defaultconsts)
 {
 
     RectCoord total = 0.0;
 
-    for (int p = 0; p < NUMTRAPNODES; p++)
-        for (int i = 0; i < NUMGLNODES; i++)
+    MathConstants temp;
+
+    if (consts.NUMGLNODES != data.size() || consts.NUMTRAPNODES != data[0].size())
+        temp = MathConstants(data[0].size(), data.size());
+    else
+        temp = consts;
+
+    for (int p = 0; p < temp.NUMTRAPNODES; p++)
+        for (int i = 0; i < temp.NUMGLNODES; i++)
         {
-            SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+            SurfaceCoord s(temp.PI / 2.0 * (temp.GLnodes[i] + 1), 2.0 * temp.PI * (double)p / (double)temp.NUMTRAPNODES);
             SphereCoord x(radius, s, center);
-            total = total + radius * radius * sin(s.theta) * GLweights[i] * data[i][p] * (PI / NUMTRAPNODES) * PI;
+            total = total + radius * radius * sin(s.theta) * temp.GLweights[i] * data[i][p] * (temp.PI / temp.NUMTRAPNODES) * temp.PI;
 
 
         }
@@ -1044,16 +1069,22 @@ RectCoord IntegrateDiscrete(const SphereData& data,  double radius = 1, RectCoor
  * @param debugOut Determines whether messages will print when a pointwise large error occurs.
  * @return The integral @f$\int_\Gamma data(x) dS_x @f$
 */
-double IntegrateDiscrete(const ScalSphereData& data,  double radius = 1)
+double IntegrateDiscrete(const ScalSphereData& data, const double & radius = 1.0 , const MathConstants& consts = defaultconsts)
 {
 
     double total = 0.0;
 
-    for (int p = 0; p < NUMTRAPNODES; p++)
-        for (int i = 0; i < NUMGLNODES; i++)
+    MathConstants temp;
+    if (consts.NUMGLNODES != data.size() || consts.NUMTRAPNODES != data[0].size())
+        temp = MathConstants(data[0].size(), data.size());
+    else
+        temp = consts;
+
+    for (int p = 0; p < temp.NUMTRAPNODES; p++)
+        for (int i = 0; i < temp.NUMGLNODES; i++)
         {
-            SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-            total = total + radius * radius * sin(s.theta) * GLweights[i] * data[i][p] * (PI / NUMTRAPNODES) * PI;
+            SurfaceCoord s(temp.PI / 2.0 * (temp.GLnodes[i] + 1), 2.0 * temp.PI * (double)p / (double)temp.NUMTRAPNODES);
+            total = total + radius * radius * sin(s.theta) * temp.GLweights[i] * data[i][p] * (temp.PI / temp.NUMTRAPNODES) * temp.PI;
         }
 
     return total;
@@ -1062,7 +1093,7 @@ double IntegrateDiscrete(const ScalSphereData& data,  double radius = 1)
 /**
  * @brief computes the max value in the coordinates of x.
 */
-double max(RectCoord x)
+inline double max(const RectCoord & x)
 {
     double temp;
 
@@ -1084,16 +1115,16 @@ double max(RectCoord x)
  * @param debugOut Determines whether messages will print when a pointwise large error occurs.
  * @return  @f$ \sup_{x \in \Gamma} |f_1(x) - f_2(x)| @f$
 */
-double LInfDifference(SphericalVectorField* f1, SphericalVectorField* f2, double r = 1.0, RectCoord center = RectCoord() , SurfaceCoord axis = SurfaceCoord())
+double LInfDifference(SphericalVectorField* f1, SphericalVectorField* f2, const MathConstants& consts = defaultconsts,const double & r = 1.0, const RectCoord & center = RectCoord() , const SurfaceCoord & axis = SurfaceCoord() )
 {
    
     double sup = 0;
     double curr = 0;
 
-    for (int i = 0; i < NUMGLNODES; i++)
-        for (double j = 0; j < NUMTRAPNODES; j++)
+    for (int i = 0; i < consts.NUMGLNODES; i++)
+        for (double j = 0; j < consts.NUMTRAPNODES; j++)
         {
-            SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)j / (double)NUMTRAPNODES);
+            SurfaceCoord s(consts.PI / 2.0 * (consts.GLnodes[i] + 1), 2.0 * consts.PI * (double)j / (double)consts.NUMTRAPNODES);
             SphereCoord x(s , center ,axis, r);
             RectCoord diff = (*f1)(x) - (*f2)(x);
             curr = max(diff);
@@ -1131,7 +1162,7 @@ public:
      * @brief Evaluates the function.
      * @return @f$ u(x) \cdot e_r(x) @f$
     */
-    double const operator()(const SphereCoord & x)
+    double operator()(const SphereCoord & x) const
     {
         SphereCoord temp = recenter(x, center);
         return dot((*rho)(x), e_r(temp));
@@ -1165,7 +1196,7 @@ public:
      * @brief Evaluates the function.
      * @return @f$ u(x) \cdot e_\theta(x) @f$
     */
-    double const operator()(const SphereCoord &  x)
+    double operator()(const SphereCoord &  x) const
     {
         SphereCoord temp = recenter(x, center);
         return dot((*rho)(x), e_theta(temp));
@@ -1199,7 +1230,7 @@ public:
      * @brief Evaluates the function.
      * @return @f$ u(x) \cdot e_\phi(x) @f$
     */
-    double const operator()(const SphereCoord & x)
+    double operator()(const SphereCoord & x) const
     {
         SphereCoord temp = recenter(x, center);
         return dot((*rho)(x), e_phi(temp));
@@ -1231,7 +1262,7 @@ public:
      * @brief Evaluates the derivative using finite difference.
      * @return @f$ \frac{\partial u}{\partial r}\left(x\right) @f$
     */
-    double const operator()(const SphereCoord & x)
+    double operator()(const SphereCoord & x) const
     {
 
         SphereCoord temp = recenter(x, center);
@@ -1307,7 +1338,7 @@ public:
      * @brief Evaluates the derivative using finite difference.
      * @return @f$ \frac{\partial u}{\partial \phi}\left(x\right) @f$
     */
-    double const operator()(const SphereCoord & x)
+    double operator()(const SphereCoord & x) const
     {
         SphereCoord temp = recenter(x, center);
         double step = 1e-3;
@@ -1325,18 +1356,18 @@ public:
  * @param center canter of the sphere to evaluate over.
  * @return a pointer to SphereData whos entries are the values of f at the quadrature nodes.
 */
-SphereData discretize(const SphericalVectorField* f , RectCoord center = RectCoord())
+SphereData discretize(const SphericalVectorField* f , const RectCoord & center = RectCoord() , const MathConstants& consts = defaultconsts)
 {
-    SphereData temp;
+    SphereData temp(consts.NUMTRAPNODES, consts.NUMGLNODES);
 
-    temp.resize((int)NUMGLNODES);
+    
 
-    for (int t = 0; t < (int)NUMGLNODES; t++)
+    for (int t = 0; t < consts.NUMGLNODES; t++)
     {
-        temp[t].resize((int)NUMTRAPNODES);
-        for (int p = 0; p < (int)NUMTRAPNODES; p++)
+        
+        for (int p = 0; p < consts.NUMTRAPNODES; p++)
         {
-            SurfaceCoord s(PI / 2.0 * (GLnodes[t] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
+            SurfaceCoord s(consts.PI / 2.0 * (consts.GLnodes[t] + 1), 2.0 * consts.PI * (double)p / (double)consts.NUMTRAPNODES);
             SphereCoord x(s, center);
             temp[t][p] = (*f)(x);
         }

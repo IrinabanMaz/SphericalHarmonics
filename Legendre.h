@@ -51,27 +51,56 @@ double factorial(int n)
     }
 }
 
+double ffactorial(int n)
+{
+    static int maxn = 1;
+    static std::vector<double> vals;
+    static bool firstcall = true;
+
+    if (firstcall)
+    {
+        vals.resize(2);
+        vals[0] = 1;
+        vals[1] = 1;
+        firstcall = false;
+    }
+    if (n < 0)
+    {
+        std::cout << "Error: negative integer passed to factorial";
+        return -1;
+    }
+    else if (n <= maxn)
+        return vals[n];
+    else
+    {
+        vals.resize(n + 1);
+        for (int i = maxn + 1; i <= n; i++)
+            vals[i] = vals[i - 2] * i;
+
+        maxn = n;
+        return vals[n];
+    }
+}
 /**
 * @brief comparison operator for maps with double. Returns true if a < b within relative accuracy of template parameter.
 */
-template<double eps>
 struct LessWithTol
 {
     bool operator()(const double& a, const double& b) const
     {
         
-            return a  < b - eps * abs(a);
+            return a  < b - 1e-14 * abs(a);
     }
 };
 
 inline bool EqualsWithTol(const double& a, const double& b)
 {
-    LessWithTol<1e-14> lwt;
+    LessWithTol lwt;
 
     return !lwt(a, b) && !lwt(b, a);
 }
 
-typedef std::map<double, std::vector<std::vector<double>>, LessWithTol<1e-14>> PrecomputedVals;
+typedef std::map<double, std::vector<std::vector<double>>, LessWithTol> PrecomputedVals;
 
 /**
 *  @brief Class representing the Associated Legendre Functions.
@@ -136,10 +165,11 @@ public:
         
 
 
-        if (values.size() <= maxdegree) {
+        if (values.size() < maxdegree+1) 
+        {
             values.resize(maxdegree + 1);
             for (int l = 0; l <= maxdegree; l++)
-                if (values[l].size() <= l)
+                if (values[l].size() < l+1)
                     values[l].resize(l + 1);
         }
 
@@ -151,14 +181,20 @@ public:
         values[1][0] = input;
 
         //set values for m = 0 using recurrence in terms of two previous i values.
-        for (int i = 1; i < maxdegree; i++)
-            values[i + 1][0] = ((2.0 * (double)i + 1) * input * values[i][0] - (double)i * values[i - 1][0]) / ((double)i + 1);
+        for (int m = 1; m <= maxdegree; m++)
+        {
+            values[m][m] = (-2.0 * (m%2) + 1.0) * ffactorial(2 * m - 1) * pow(s,m);
+        }
 
+        for (int m = 0; m < maxdegree; m++)
+        {
+                values[m+1][m] = input * (2.0 * (double)m + 1.0) * values[m][m];
+        }
 
         //computes values for larger values of m in terms of previous value of m. for i = 0, uses the values from i = 1, i = 2, instead.
-        for (int i = 1; i <=maxdegree; i++)
-           for (int m = 0; m <i; m++)
-                values[i][m + 1] = ((((double)i - (double)m)) * input * values[i][m] - ((double)i + (double)m) * values[i - 1][m]) / s;
+        for (int n = 2; n <=maxdegree; n++)
+           for (int m = n-1; m > 0; m--)
+                values[n][m - 1] = -(values[n][m+1] + 2.0 * (double)m * input / s * values[n][m])/(((double)n - (double)m + 1.0) * ((double)n + (double)m));
 
             
       //  prevals[val] = values;

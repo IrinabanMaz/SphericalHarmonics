@@ -66,6 +66,8 @@ private:
     int m;
     int n;
     Legendre* poly;
+    
+    double PI = 4.0 * atan(1.0);
 
 public:
     /**
@@ -74,7 +76,7 @@ public:
      * @param b the degree (n).
      * @note we require @f$ 0 \leq m \leq n @f$.
     */
-    YReal(int a = 0, int b = 0) : poly(&legendrePoly)
+    YReal(const int a = 0, const int b = 0 ) : poly(&legendrePoly)
     {
         m = a;
         n = b;
@@ -95,6 +97,12 @@ public:
         name = "YReal";
     }
 
+    void reset(int a, int b)
+    {
+        m = a;
+        n = b;
+    }
+
     const YReal & operator =(const YReal& yr)
     {
         m = yr.m;
@@ -105,16 +113,13 @@ public:
         return *this;
     }
 
-    void operator ~()
-    {
-    }
     /**
      * @brief Evaluates @f$ \mathfrak{R}(Y_n^m) @f$ at s.
      * @return @f{equation}{
       \alpha_{n,m} P_n^m(\cos(\theta)) \cos{m \phi}
        @f}
     */
-    double operator()(const SurfaceCoord & s) const 
+    inline double operator()(const SurfaceCoord & s) const 
     {
 
 
@@ -137,7 +142,7 @@ public:
       \frac{\partial \mathfrak{R}(Y_n^m)}{\partial \phi} = -m \alpha_{n,m} P_n^m(\cos(\theta)) \sin{m \phi}
        @f}
     */
-    double dPhi(const SurfaceCoord & s) const
+    inline double dPhi(const SurfaceCoord & s) const
     {
         double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * PI * (double)factorial(n + m)));
         //std::cout << coef << std::endl;
@@ -155,7 +160,7 @@ public:
       \frac{\partial^2 \mathfrak{R}(Y_n^m)}{\partial \phi^2} = -m^2 \mathfrak{R}(Y_n^m)
        @f}
     */
-    double dPhidPhi(const SurfaceCoord & s) const
+    inline double dPhidPhi(const SurfaceCoord & s) const
     {
         double m_(m);
         return -m_ * m_ * operator()(s);
@@ -168,7 +173,7 @@ public:
        @f}
        See also: @ref  Legendre::dTheta()
     */
-    double dTheta(const SurfaceCoord & s) const
+    inline double dTheta(const SurfaceCoord & s) const
     {
         double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * PI * (double)factorial(n + m)));
         //std::cout << coef << std::endl;
@@ -188,7 +193,7 @@ public:
        @f}
        See also: @ref Legendre::dTheta()
     */
-    double dThetadTheta(const SurfaceCoord & s) const
+    inline double dThetadTheta(const SurfaceCoord & s) const
     {
         double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * PI * (double)factorial(n + m)));
         //std::cout << coef << std::endl;
@@ -208,7 +213,7 @@ public:
        @f}
        See also: @ref Legendre::dTheta() @ref dPhi()
     */
-    double dThetadPhi(const SurfaceCoord & s) const
+    inline double dThetadPhi(const SurfaceCoord & s) const
     {
         double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * PI * (double)factorial(n + m)));
         //std::cout << coef << std::endl;
@@ -240,6 +245,7 @@ private:
     int m;
     int n;
     Legendre* poly;
+    double PI = 4.0 * atan(1.0);
 
 public:
 
@@ -271,6 +277,12 @@ public:
         name = "YReal";
     }
 
+    void reset(int a, int b)
+    {
+        m = a;
+        n = b;
+    }
+
     const YImag& operator =(const YImag& yi)
     {
         m = yi.m;
@@ -281,9 +293,6 @@ public:
         return *this;
     }
 
-    void operator ~()
-    {
-    }
 
     /**
      * @brief Evaluates @f$ \mathfrak{I}(Y_n^m) @f$ at s.
@@ -291,7 +300,7 @@ public:
       \alpha_{n,m} P_n^m(\cos(\theta)) \sin{m \phi}
        @f}
     */
-    double operator()(const SurfaceCoord & s) const 
+    inline double operator()(const SurfaceCoord & s) const 
     {
 
 
@@ -313,7 +322,7 @@ public:
       \frac{\partial \mathfrak{R}(Y_n^m)}{\partial \phi} = m \alpha_{n,m} P_n^m(\cos(\theta)) \cos{m \phi}
        @f}
     */
-    double dPhi(const SurfaceCoord & s) const
+    inline double dPhi(const SurfaceCoord & s) const
     {
         double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * PI * (double)factorial(n + m)));
         //std::cout << coef << std::endl;
@@ -331,7 +340,7 @@ public:
       \frac{\partial^2 \mathfrak{I}(Y_n^m)}{\partial \phi^2} = -m^2 \mathfrak{I}(Y_n^m)
        @f}
     */
-    double dPhidPhi(const SurfaceCoord & s) const
+    inline double dPhidPhi(const SurfaceCoord & s) const
     {
         double m_(m);
         return -m_ * m_ * operator()(s);
@@ -344,7 +353,7 @@ public:
        @f}
        See also: @ref  Legendre::dTheta()
     */
-    double dTheta(const SurfaceCoord & s) const
+    inline double dTheta(const SurfaceCoord & s) const
     {
         double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * PI * (double)factorial(n + m)));
         //std::cout << coef << std::endl;
@@ -364,7 +373,7 @@ public:
        @f}
        See also: @ref Legendre::dTheta()
     */
-    double dThetadTheta(const SurfaceCoord & s) const
+    inline double dThetadTheta(const SurfaceCoord & s) const
     {
         double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * PI * (double)factorial(n + m)));
         //std::cout << coef << std::endl;
@@ -384,7 +393,7 @@ public:
        @f}
        See also: @ref Legendre::dTheta() @ref dPhi()
     */
-    double dThetadPhi(const SurfaceCoord & s) const
+    inline double dThetadPhi(const SurfaceCoord & s) const
     {
         double coef = sqrt((2.0 * (double)n + 1.0) * (double)factorial(n - m) / (4.0 * PI * (double)factorial(n + m)));
         //std::cout << coef << std::endl;
@@ -400,158 +409,6 @@ public:
 };
 
 /**
- * @brief Class testing the derivatives of the real part of @f$ Y_n^m @f$. 
-*/
-class Yrtest : public SphericalScalarFunction
-{
-private:
-    YReal yr;
-public:
-    /**
-     * @brief Evaluates to YReal.
-    */
-    double operator()(const SphereCoord & x) const 
-    {
-        return yr(x.s);
-    }
-
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper(int m ,int n)
-    {
-            
-            yr = YReal(m, n);
-            NdPhi dPhi(this);
-            NdPhi dPhidPhi(&dPhi);
-            NdTheta dTheta(this);
-            NdTheta dThetadTheta(&dTheta);
-            NdTheta dPhidTheta(&dPhi);
-
-
-            double dPhierr = 0.0;
-            double dPhidPhierr = 0.0;
-            double dThetaerr = 0.0;
-            double dThetadThetaerr = 0.0;
-            double dPhidThetaerr = 0.0;
-
-            for (int p = 0; p < NUMTRAPNODES; p++)
-                for (int i = 0; i < NUMGLNODES; i++)
-                {
-                    SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                    SphereCoord x(1, s);
-                    double diff = dPhi(x) - yr.dPhi(x.s);
-                    dPhierr +=sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                    diff = dPhidPhi(x) - yr.dPhidPhi(x.s);
-                    dPhidPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                    diff = dTheta(x) - yr.dTheta(x.s);
-                    dThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                    diff = dThetadTheta(x) - yr.dThetadTheta(x.s);
-                    dThetadThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                    diff = dPhidTheta(x) - yr.dThetadPhi(x.s);
-                    dPhidThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                    /*if (dot(diff, diff) > 1e-12)
-                    {
-                        std::cout << " error of " << dot(diff, diff) << " at " << x << std::endl;
-                        std::cout << "value of f: " << (*f1)(x) << std::endl;
-                        std::cout << "value of g: " << (*f2)(x) << std::endl;
-
-                    }
-                    */
-                }
-
-            std::cout << "Error in computing dPhi: " << dPhierr << "\n";
-            std::cout << "Error in computing dPhidPhi: " << dPhidPhierr << "\n";
-            std::cout << "Error in computing dTheta: " << dThetaerr << "\n";
-            std::cout << "Error in computing dThetadTheta: " << dThetadThetaerr << "\n";
-            std::cout << " Error in computing dThetadPhi: " << dPhidThetaerr << "\n";
-        }
-    
-
-};
-
-/**
- * @brief Class testing the derivatives of the imaginary part of @f$ Y_n^m @f$.
-*/
-class Yitest : public SphericalScalarFunction
-{
-private:
-    YImag yi;
-public:
-
-    /**
-     * @brief Evaluates to YImag.
-    */
-    double  operator()(const SphereCoord & x) const
-    {
-        return yi(x.s);
-    }
-
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper(int m, int n)
-    {
-       
-        yi = YImag(m, n);
-        NdPhi dPhi(this);
-        NdPhi dPhidPhi(&dPhi);
-        NdTheta dTheta(this);
-        NdTheta dThetadTheta(&dTheta);
-        NdTheta dPhidTheta(&dPhi);
-
-
-        double dPhierr = 0.0;
-        double dPhidPhierr = 0.0;
-        double dThetaerr = 0.0;
-        double dThetadThetaerr = 0.0;
-        double dPhidThetaerr = 0.0;
-
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMTRAPNODES; i++)
-            {
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                SphereCoord x(1, s);
-                double diff = dPhi(x) - yi.dPhi(x.s);
-                dPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = dPhidPhi(x) - yi.dPhidPhi(x.s);
-                dPhidPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = dTheta(x) - yi.dTheta(x.s);
-                dThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = dThetadTheta(x) - yi.dThetadTheta(x.s);
-                dThetadThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = dPhidTheta(x) - yi.dThetadPhi(x.s);
-                dPhidThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                /*if (dot(diff, diff) > 1e-12)
-                {
-                    std::cout << " error of " << dot(diff, diff) << " at " << x << std::endl;
-                    std::cout << "value of f: " << (*f1)(x) << std::endl;
-                    std::cout << "value of g: " << (*f2)(x) << std::endl;
-
-                }
-                */
-            }
-
-        std::cout << "Error in computing dPhi: " << dPhierr << "\n";
-        std::cout << "Error in computing dPhidPhi: " << dPhidPhierr << "\n";
-        std::cout << "Error in computing dTheta: " << dThetaerr << "\n";
-        std::cout << "Error in computing dThetadTheta: " << dThetadThetaerr << "\n";
-        std::cout << " Error in computing dThetadPhi: " << dPhidThetaerr << "\n";
-    }
-
-
-};
-/**
  * @brief Functor for surface gradient of @f$ \mathfrak{R}(Y_n^m) @f$. Includes derivatives and spherical basis component extractions. 
 */
 class GReal : public SphericalVectorField
@@ -562,16 +419,21 @@ private:
     YReal yr;
 
 public:
-    GReal() {}
+    GReal(){}
     /**
      * @brief Assigns the order and degree to the object.
     */
-    GReal(int m0, int n0)
+    GReal( int m0, int n0) : yr(m0, n0)
     {
         m = m0;
         n = n0;
+    }
 
-        yr = YReal(m, n);
+    void reset(int a, int b)
+    {
+        m = a;
+        n = b;
+        yr.reset(a, b);
     }
 
     /**
@@ -580,7 +442,7 @@ public:
      * \nabla_\Gamma \mathfrak{R}(Y_n^m) = \frac{\partial \mathfrak{R}(Y_n^m)}{\partial \theta} \boldsymbol{e}_\theta + \frac{1}{\sin\theta} \frac{\partial \mathfrak{R}(Y_n^m)}{\partial\phi}\boldsymbol{e}_\phi
      * @f} evaluated at x. The partial derivatives are YReal::dPhi() and YReal::dTheta().
     */
-    RectCoord  operator()(const SphereCoord & x) const
+    inline RectCoord  operator()(const SphereCoord & x) const
     {
         double dTheta = yr.dTheta(x.s);
 
@@ -597,7 +459,7 @@ public:
      * 
      * See also: YReal::dTheta().
     */
-    double eTheta(const SphereCoord & x) const
+    inline double eTheta(const SphereCoord & x) const
     {
         return yr.dTheta(x.s);
     }
@@ -608,7 +470,7 @@ public:
      *
      * See also: YReal::dPhi().
     */
-    double ePhi(const SphereCoord & x) const
+    inline double ePhi(const SphereCoord & x) const
     {
         return yr.dPhi(x.s) / sin(x.s.theta);
     }
@@ -619,7 +481,7 @@ public:
      *
      * See also: YReal::dThetadTheta().
     */
-    double eTheta_dTheta(const SphereCoord & x) const
+    inline double eTheta_dTheta(const SphereCoord & x) const
     {
         return yr.dThetadTheta(x.s);
     }
@@ -630,7 +492,7 @@ public:
      *
      * See also: YReal::dThetadPhi().
     */
-    double eTheta_dPhi(const SphereCoord & x) const
+    inline double eTheta_dPhi(const SphereCoord & x) const
     {
         return yr.dThetadPhi(x.s);
     }
@@ -641,7 +503,7 @@ public:
      *
      * See also: YReal::dPhidPhi().
     */
-    double ePhi_dPhi(const SphereCoord & x) const
+    inline double ePhi_dPhi(const SphereCoord & x) const
     {
         return yr.dPhidPhi(x.s) / sin(x.s.theta);
     }
@@ -655,67 +517,12 @@ public:
      *
      * See also: YReal::dThetadPhi() , YReal::dPhi().
     */
-    double ePhi_dTheta(const SphereCoord & x) const
+    inline double ePhi_dTheta(const SphereCoord & x) const
     {
         return (yr.dThetadPhi(x.s) * sin(x.s.theta) - cos(x.s.theta) * yr.dPhi(x.s)) / (sin(x.s.theta) * sin(x.s.theta));
     }
 
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper()
-    {
-        dot_ePhi dep(this);
-        dot_eTheta det(this);
-
-        NdPhi epdp(&dep);
-        NdPhi etdp(&det);
-
-        NdTheta epdt(&dep);
-        NdTheta etdt(&det);
-
-
-        double ephierr = 0.0;
-        double ethetaerr = 0.0;
-        double ephidPhierr = 0.0;
-        double ephidThetaerr = 0.0;
-        double ethetadThetaerr = 0.0;
-        double ethetadPhierr = 0.0;
-
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMTRAPNODES; i++)
-            {
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                SphereCoord x(1, s);
-
-                double diff = ePhi(x) - dep(x);
-                ephierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta(x) - det(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dPhi(x) - epdp(x);
-                ephidPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dTheta(x) - epdt(x);
-                ephidThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dTheta(x) - etdt(x);
-                ethetadThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dPhi(x) - etdp(x.s);
-                ethetadPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-               
-            }
-
-        std::cout << "Error in computing ephi: " << ephierr << "\n";
-        std::cout << "Error in computing ephidPhi: " << ephidPhierr << "\n";
-        std::cout << "Error in computing etheta: " << ethetaerr << "\n";
-        std::cout << "Error in computing ethetadTheta: " << ethetadThetaerr << "\n";
-        std::cout << " Error in computing ethetadPhi: " << ethetadPhierr << "\n";
-        std::cout << " Error in computing ephidTheta: " << ephidThetaerr << "\n";
-    }
+    
 };
 
 
@@ -737,12 +544,18 @@ public:
     /**
      * @brief Assigns the order and degree to the object.
     */
-    GImag(int m0, int n0)
+    GImag(int m0, int n0) : yi(m0,n0)
     {
         m = m0;
         n = n0;
+    }
 
-        yi = YImag(m, n);
+    void reset(int a, int b)
+    {
+        m = a;
+        n = b;
+
+        yi.reset(a, b);
     }
 
     
@@ -752,7 +565,7 @@ public:
      * \nabla_\Gamma \mathfrak{I}(Y_n^m) = \frac{\partial \mathfrak{I}(Y_n^m)}{\partial \theta} \boldsymbol{e}_\theta + \frac{1}{\sin\theta} \frac{\partial \mathfrak{I}(Y_n^m)}{\partial\phi}\boldsymbol{e}_\phi
      * @f} evaluated at x. The partial derivatives are YImag::dPhi() and YImag::dTheta().
     */
-    RectCoord  operator()(const SphereCoord & x) const
+    inline RectCoord  operator()(const SphereCoord & x) const
     {
 
 
@@ -771,7 +584,7 @@ public:
      *
      * See also: YImag::dTheta().
     */
-    double eTheta(const SphereCoord & x) const
+    inline double eTheta(const SphereCoord & x) const
     {
         return yi.dTheta(x.s);
     }
@@ -782,7 +595,7 @@ public:
      *
      * See also: YImag::dPhi().
     */
-    double ePhi(const SphereCoord & x) const
+    inline double ePhi(const SphereCoord & x) const
     {
         return yi.dPhi(x.s) / sin(x.s.theta);
     }
@@ -793,7 +606,7 @@ public:
      *
      * See also: YImag::dThetadTheta().
     */
-    double eTheta_dTheta(const SphereCoord & x) const
+    inline double eTheta_dTheta(const SphereCoord & x) const
     {
         return yi.dThetadTheta(x.s);
     }
@@ -804,7 +617,7 @@ public:
      *
      * See also: YImag::dThetadPhi().
     */
-    double eTheta_dPhi(const SphereCoord & x) const
+    inline double eTheta_dPhi(const SphereCoord & x) const
     {
         return yi.dThetadPhi(x.s);
     }
@@ -815,7 +628,7 @@ public:
      *
      * See also: YImag::dPhidPhi().
     */
-    double ePhi_dPhi(const SphereCoord & x) const
+    inline double ePhi_dPhi(const SphereCoord & x) const
     {
         return yi.dPhidPhi(x.s) / sin(x.s.theta);
     }
@@ -829,67 +642,12 @@ public:
      *
      * See also: YImag::dThetadPhi() , YImag::dPhi().
     */
-    double ePhi_dTheta(const SphereCoord & x) const
+    inline double ePhi_dTheta(const SphereCoord & x) const
     {
         return (yi.dThetadPhi(x.s) * sin(x.s.theta) - cos(x.s.theta) * yi.dPhi(x.s)) / (sin(x.s.theta) * sin(x.s.theta));
     }
 
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper()
-    {
-        dot_ePhi dep(this);
-        dot_eTheta det(this);
-
-        NdPhi epdp(&dep);
-        NdPhi etdp(&det);
-
-        NdTheta epdt(&dep);
-        NdTheta etdt(&det);
-
-
-        double ephierr = 0.0;
-        double ethetaerr = 0.0;
-        double ephidPhierr = 0.0;
-        double ephidThetaerr = 0.0;
-        double ethetadThetaerr = 0.0;
-        double ethetadPhierr = 0.0;
-
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMTRAPNODES; i++)
-            {
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                SphereCoord x(1, s);
-
-                double diff = ePhi(x) - dep(x);
-                ephierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta(x) - det(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dPhi(x) - epdp(x);
-                ephidPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dTheta(x) - epdt(x);
-                ephidThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dTheta(x) - etdt(x);
-                ethetadThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dPhi(x) - etdp(x.s);
-                ethetadPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                
-            }
-
-        std::cout << "Error in computing ephi: " << ephierr << "\n";
-        std::cout << "Error in computing ephidPhi: " << ephidPhierr << "\n";
-        std::cout << "Error in computing etheta: " << ethetaerr << "\n";
-        std::cout << "Error in computing ethetadTheta: " << ethetadThetaerr << "\n";
-        std::cout << " Error in computing ethetadPhi: " << ethetadPhierr << "\n";
-        std::cout << " Error in computing ephidTheta: " << ephidThetaerr << "\n";
-    }
+    
 
 };
 
@@ -909,12 +667,10 @@ public:
     /**
      * @brief Initializes the order and degree.
     */
-    VReal(int a = 0, int b = 0)
+    VReal( int a = 0, int b = 0) : yr( a , b) , gr(a,b)
     {
         m = a;
         n = b;
-        yr = YReal(m, n);
-        gr = GReal(m, n);
     }
 
     /**
@@ -923,7 +679,7 @@ public:
      * 
      * See YReal::operator()() , GReal::operator()().
     */
-    RectCoord operator()(const SphereCoord & x) const 
+    inline RectCoord operator()(const SphereCoord & x) const 
     {
         return -((double)n + 1.0) * yr(x.s) * e_r(x) + gr(x);
     }
@@ -935,8 +691,8 @@ public:
     {
         m = a;
         n = b;
-        yr = YReal(m, n);
-        gr = GReal(m, n);
+        yr.reset(a, b);
+        gr.reset(a, b);
     }
 
     /**
@@ -945,7 +701,7 @@ public:
      * 
      * See: YReal.
     */
-    double eR(const SphereCoord & x) const
+    inline double eR(const SphereCoord & x) const
     {
         return -((double)n + 1.0) * yr(x.s);
     }
@@ -954,7 +710,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{R}(\boldsymbol{V}_n^m) @f$.
      * @return  @f$ GReal::eTheta() @f$.
     */
-    double eTheta(const SphereCoord & x) const
+    inline double eTheta(const SphereCoord & x) const
     {
         return gr.eTheta(x);
     }
@@ -963,7 +719,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{R}(\boldsymbol{V}_n^m) @f$.
      * @return GReal::ePhi().
     */
-    double ePhi(const SphereCoord & x) const
+    inline double ePhi(const SphereCoord & x) const
     {
         return gr.ePhi(x);
     }
@@ -972,7 +728,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{R}(\boldsymbol{V}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
      * @return GReal::eTheta_dTheta().
     */
-    double eTheta_dTheta(const SphereCoord & x) const
+    inline double eTheta_dTheta(const SphereCoord & x) const
     {
         return gr.eTheta_dTheta(x);
     }
@@ -981,7 +737,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{R}(\boldsymbol{V}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return GReal::eTheta_dPhi().
     */
-    double eTheta_dPhi(const SphereCoord & x) const
+    inline double eTheta_dPhi(const SphereCoord & x) const
     {
         return gr.eTheta_dPhi(x);
     }
@@ -990,7 +746,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{R}(\boldsymbol{V}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return GReal::ePhi_dPhi().
     */
-    double ePhi_dPhi(const SphereCoord & x) const
+    inline double ePhi_dPhi(const SphereCoord & x) const
     {
         return gr.ePhi_dPhi(x);
     }
@@ -998,7 +754,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{R}(\boldsymbol{V}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
      * @return GReal::ePhi_dTheta().
     */
-    double ePhi_dTheta(const SphereCoord & x) const
+    inline double ePhi_dTheta(const SphereCoord & x) const
     {
         return gr.ePhi_dTheta(x);
     }
@@ -1009,7 +765,7 @@ public:
      * 
      * See: YReal::dTheta()
     */
-    double eR_dTheta(const SphereCoord & x) const
+    inline double eR_dTheta(const SphereCoord & x) const
     {
         return -((double) n+1.0)*yr.dTheta(x.s);
     }
@@ -1020,94 +776,12 @@ public:
      *
      * See: YReal::dPhi()
     */
-    double eR_dPhi(const SphereCoord & x) const
+    inline double eR_dPhi(const SphereCoord & x) const
     {
         return -((double)n + 1.0) * yr.dPhi(x.s);
     }
 
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper()
-    {
-        dot_ePhi dep(this);
-        dot_eTheta det(this);
-        dot_eR der(this);
-
-        NdPhi epdp(&dep);
-        NdPhi etdp(&det);
-        NdPhi erdp(&der);
-
-        NdTheta epdt(&dep);
-        NdTheta etdt(&det);
-        NdTheta erdt(&der);
-
-
-
-        double ephierr = 0.0;
-        double ethetaerr = 0.0;
-        double ererr = 0.0;
-        double ephidPhierr = 0.0;
-        double ephidThetaerr = 0.0;
-        double erdPhierr = 0.0;
-        double ethetadThetaerr = 0.0;
-        double ethetadPhierr = 0.0;
-        double erdThetaerr = 0.0;
-
-
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMTRAPNODES; i++)
-            {
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                SphereCoord x(1, s);
-
-                double diff = ePhi(x) - dep(x);
-                ephierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta(x) - det(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                
-                diff = eR(x) - der(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dPhi(x) - epdp(x);
-                ephidPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dTheta(x) - epdt(x);
-                ephidThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                
-
-                diff = eTheta_dTheta(x) - etdt(x);
-                ethetadThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dPhi(x) - etdp(x.s);
-                ethetadPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                
-                diff = eR_dTheta(x) - erdt(x);
-                erdThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dPhi(x) - erdp(x);
-                erdPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                
-            }
-
-        std::cout << "Error in computing ephi: " << ephierr << "\n";
-        std::cout << "Error in computing etheta: " << ethetaerr << "\n";
-        std::cout << "Error in computing er: " << ererr << "\n";
-
-        std::cout << "Error in computing ephidPhi: " << ephidPhierr << "\n";
-        std::cout << "Error in computing ephidTheta: " << ephidThetaerr << "\n";
-
-        std::cout << "Error in computing ethetadTheta: " << ethetadThetaerr << "\n";
-        std::cout << "Error in computing ethetadPhi: " << ethetadPhierr << "\n";
-
-        std::cout << "Error in computing erdTheta: " << erdThetaerr << "\n";
-        std::cout << "Error in computing erdPhi: " << erdPhierr << "\n";
-        
-    }
-
+    
 
 };
 
@@ -1126,12 +800,10 @@ public:
     /**
      * @brief Initializes the order and degree.
     */
-    VImag(int a = 0, int b=0)
+    VImag( int a = 0, int b = 0) : yi( a, b), gi( a, b)
     {
         m = a;
         n = b;
-        yi = YImag(m, n);
-        gi = GImag(m, n);
     }
 
     /**
@@ -1140,7 +812,7 @@ public:
      *
      * See YImag::operator()() , GImag::operator()().
     */
-    RectCoord operator()(const SphereCoord & x) const 
+    inline RectCoord operator()(const SphereCoord & x) const 
     {
         return -((double)n + 1.0) * yi(x.s) * e_r(x) + gi(x);
     }
@@ -1152,7 +824,7 @@ public:
      *
      * See: YImag::operator()().
     */
-    double eR(const SphereCoord & x) const
+    inline double eR(const SphereCoord & x) const
     {
         return -((double)n + 1.0) * yi(x.s);
     }
@@ -1161,7 +833,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{I}(\boldsymbol{V}_n^m) @f$.
      * @return GImag::eTheta().
     */
-    double eTheta(const SphereCoord & x) const
+    inline double eTheta(const SphereCoord & x) const
     {
         return gi.eTheta(x);
     }
@@ -1170,7 +842,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{I}(\boldsymbol{V}_n^m) @f$.
      * @return GImag::ePhi().
     */
-    double ePhi(const SphereCoord & x) const
+    inline double ePhi(const SphereCoord & x) const
     {
         return gi.ePhi(x);
     }
@@ -1179,7 +851,7 @@ public:
     * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{I}(\boldsymbol{V}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
     * @return GImag::eTheta_dTheta().
     */
-    double eTheta_dTheta(const SphereCoord & x) const
+    inline double eTheta_dTheta(const SphereCoord & x) const
     {
         return gi.eTheta_dTheta(x);
     }
@@ -1188,7 +860,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{I}(\boldsymbol{V}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return GImag::eTheta_dPhi().
     */
-    double eTheta_dPhi(const SphereCoord & x) const
+    inline double eTheta_dPhi(const SphereCoord & x) const
     {
         return gi.eTheta_dPhi(x);
     }
@@ -1197,7 +869,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{I}(\boldsymbol{V}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return GImag::ePhi_dPhi().
     */
-    double ePhi_dPhi(const SphereCoord & x) const
+    inline double ePhi_dPhi(const SphereCoord & x) const
     {
         return gi.ePhi_dPhi(x);
     }
@@ -1206,7 +878,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{I}(\boldsymbol{V}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
      * @return GImag::ePhi_dTheta().
     */
-    double ePhi_dTheta(const SphereCoord& x) const
+    inline double ePhi_dTheta(const SphereCoord& x) const
     {
         return gi.ePhi_dTheta(x);
     }
@@ -1217,7 +889,7 @@ public:
      *
      * See: YImag::dTheta()
     */
-    double eR_dTheta(const SphereCoord& x) const
+    inline double eR_dTheta(const SphereCoord& x) const
     {
         return -((double)n + 1.0) * yi.dTheta(x.s);
     }
@@ -1228,7 +900,7 @@ public:
      *
      * See: YImag::dPhi()
     */
-    double eR_dPhi(const SphereCoord & x) const
+    inline double eR_dPhi(const SphereCoord & x) const
     {
         return -(double)(n + 1) * yi.dPhi(x.s);
     }
@@ -1240,99 +912,11 @@ public:
     {
         m = a;
         n = b;
-        yi = YImag(m, n);
-        gi = GImag(m, n);
+        yi.reset(a, b);
+        gi.reset(a, b);
     }
 
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper()
-    {
-        dot_ePhi dep(this);
-        dot_eTheta det(this);
-        dot_eR der(this);
-
-        NdPhi epdp(&dep);
-        NdPhi etdp(&det);
-        NdPhi erdp(&der);
-
-        NdTheta epdt(&dep);
-        NdTheta etdt(&det);
-        NdTheta erdt(&der);
-
-
-
-        double ephierr = 0.0;
-        double ethetaerr = 0.0;
-        double ererr = 0.0;
-        double ephidPhierr = 0.0;
-        double ephidThetaerr = 0.0;
-        double erdPhierr = 0.0;
-        double ethetadThetaerr = 0.0;
-        double ethetadPhierr = 0.0;
-        double erdThetaerr = 0.0;
-
-
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMTRAPNODES; i++)
-            {
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                SphereCoord x(1, s);
-
-                double diff = ePhi(x) - dep(x);
-                ephierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta(x) - det(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR(x) - der(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dPhi(x) - epdp(x);
-                ephidPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dTheta(x) - epdt(x);
-                ephidThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-
-
-                diff = eTheta_dTheta(x) - etdt(x);
-                ethetadThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dPhi(x) - etdp(x.s);
-                ethetadPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dTheta(x) - erdt(x);
-                erdThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dPhi(x) - erdp(x);
-                erdPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                /*if (dot(diff, diff) > 1e-12)
-                {
-                    std::cout << " error of " << dot(diff, diff) << " at " << x << std::endl;
-                    std::cout << "value of f: " << (*f1)(x) << std::endl;
-                    std::cout << "value of g: " << (*f2)(x) << std::endl;
-
-                }
-                */
-            }
-
-        std::cout << "Error in computing ephi: " << ephierr << "\n";
-        std::cout << "Error in computing etheta: " << ethetaerr << "\n";
-        std::cout << "Error in computing er: " << ererr << "\n";
-
-        std::cout << "Error in computing ephidPhi: " << ephidPhierr << "\n";
-        std::cout << "Error in computing ephidTheta: " << ephidThetaerr << "\n";
-
-        std::cout << "Error in computing ethetadTheta: " << ethetadThetaerr << "\n";
-        std::cout << "Error in computing ethetadPhi: " << ethetadPhierr << "\n";
-
-        std::cout << "Error in computing erdTheta: " << erdThetaerr << "\n";
-        std::cout << "Error in computing erdPhi: " << erdPhierr << "\n";
-
-    }
+    
 
 };
 
@@ -1352,12 +936,10 @@ public:
     /**
      * @brief Initializes the order and degree.
     */
-    WReal(int a = 0, int b = 1)
+    WReal( int a = 0, int b = 0) : yr( a, b), gr( a, b)
     {
         m = a;
         n = b;
-        yr = YReal(m, n);
-        gr = GReal(m, n);
     }
 
     /**
@@ -1366,7 +948,7 @@ public:
      *
      * See YReal::operator()() , GReal::operator()().
     */
-    RectCoord  operator()(const SphereCoord & x) const
+    inline RectCoord  operator()(const SphereCoord & x) const
     {
         return (double)n * yr(x.s) * e_r(x) + gr(x);
     }
@@ -1378,8 +960,8 @@ public:
     {
         m = a;
         n = b;
-        yr = YReal(m, n);
-        gr = GReal(m, n);
+        yr.reset(m, n);
+        gr.reset(m, n);
     }
 
 
@@ -1389,7 +971,7 @@ public:
      *
      * See: YReal::operator()().
     */
-    double eR(const SphereCoord & x) const
+    inline double eR(const SphereCoord & x) const
     {
         return n * yr(x.s);
     }
@@ -1398,7 +980,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{R}(\boldsymbol{W}_n^m) @f$.
      * @return GReal::eTheta().
     */
-    double eTheta(const SphereCoord & x) const
+    inline double eTheta(const SphereCoord & x) const
     {
         return gr.eTheta(x.s);
     }
@@ -1407,7 +989,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{R}(\boldsymbol{W}_n^m) @f$.
      * @return GReal::ePhi().
     */
-    double ePhi(const SphereCoord & x) const
+    inline double ePhi(const SphereCoord & x) const
     {
         return gr.ePhi(x);
     }
@@ -1416,7 +998,7 @@ public:
     * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{R}(\boldsymbol{W}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
     * @return GReal::eTheta_dTheta().
     */
-    double eTheta_dTheta(const SphereCoord & x) const
+    inline double eTheta_dTheta(const SphereCoord & x) const
     {
         return gr.eTheta_dTheta(x);
     }
@@ -1425,7 +1007,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{R}(\boldsymbol{W}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return GReal::eTheta_dPhi().
     */
-    double eTheta_dPhi(const SphereCoord & x) const
+    inline double eTheta_dPhi(const SphereCoord & x) const
     {
         return gr.eTheta_dPhi(x);
     }
@@ -1434,7 +1016,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{R}(\boldsymbol{W}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return GReal::ePhi_dPhi().
     */
-    double ePhi_dPhi(const SphereCoord & x) const
+    inline double ePhi_dPhi(const SphereCoord & x) const
     {
         return gr.ePhi_dPhi(x);
     }
@@ -1443,7 +1025,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{R}(\boldsymbol{W}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
      * @return GReal::ePhi_dTheta().
     */
-    double ePhi_dTheta(const SphereCoord& x) const
+    inline double ePhi_dTheta(const SphereCoord& x) const
     {
         return gr.ePhi_dTheta(x);
     }
@@ -1454,7 +1036,7 @@ public:
      *
      * See: YReal::dTheta()
     */
-    double eR_dTheta(const SphereCoord& x) const
+    inline double eR_dTheta(const SphereCoord& x) const
     {
         return (double)n * yr.dTheta(x.s);
     }
@@ -1465,100 +1047,12 @@ public:
      *
      * See: YReal::dPhi()
     */
-    double eR_dPhi(const SphereCoord & x) const
+    inline double eR_dPhi(const SphereCoord & x) const
     {
         return (double)n * yr.dPhi(x.s);
     }
 
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper()
-    {
-        dot_ePhi dep(this);
-        dot_eTheta det(this);
-        dot_eR der(this);
-
-        NdPhi epdp(&dep);
-        NdPhi etdp(&det);
-        NdPhi erdp(&der);
-
-        NdTheta epdt(&dep);
-        NdTheta etdt(&det);
-        NdTheta erdt(&der);
-
-
-
-        double ephierr = 0.0;
-        double ethetaerr = 0.0;
-        double ererr = 0.0;
-        double ephidPhierr = 0.0;
-        double ephidThetaerr = 0.0;
-        double erdPhierr = 0.0;
-        double ethetadThetaerr = 0.0;
-        double ethetadPhierr = 0.0;
-        double erdThetaerr = 0.0;
-
-
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMTRAPNODES; i++)
-            {
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                SphereCoord x(1, s);
-
-                double diff = ePhi(x) - dep(x);
-                ephierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta(x) - det(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR(x) - der(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dPhi(x) - epdp(x);
-                ephidPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dTheta(x) - epdt(x);
-                ephidThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-
-
-                diff = eTheta_dTheta(x) - etdt(x);
-                ethetadThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dPhi(x) - etdp(x.s);
-                ethetadPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dTheta(x) - erdt(x);
-                erdThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dPhi(x) - erdp(x);
-                erdPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                /*if (dot(diff, diff) > 1e-12)
-                {
-                    std::cout << " error of " << dot(diff, diff) << " at " << x << std::endl;
-                    std::cout << "value of f: " << (*f1)(x) << std::endl;
-                    std::cout << "value of g: " << (*f2)(x) << std::endl;
-
-                }
-                */
-            }
-
-        std::cout << "Error in computing ephi: " << ephierr << "\n";
-        std::cout << "Error in computing etheta: " << ethetaerr << "\n";
-        std::cout << "Error in computing er: " << ererr << "\n";
-
-        std::cout << "Error in computing ephidPhi: " << ephidPhierr << "\n";
-        std::cout << "Error in computing ephidTheta: " << ephidThetaerr << "\n";
-
-        std::cout << "Error in computing ethetadTheta: " << ethetadThetaerr << "\n";
-        std::cout << "Error in computing ethetadPhi: " << ethetadPhierr << "\n";
-
-        std::cout << "Error in computing erdTheta: " << erdThetaerr << "\n";
-        std::cout << "Error in computing erdPhi: " << erdPhierr << "\n";
-
-    }
+    
 
 };
 
@@ -1578,12 +1072,10 @@ public:
     /**
      * @brief Initializes the order and degree.
     */
-    WImag(int a = 0, int b = 1)
+    WImag( int a = 0, int b = 0) : yi( a, b), gi( a, b)
     {
         m = a;
         n = b;
-        yi = YImag(m, n);
-        gi = GImag(m, n);
     }
 
     /**
@@ -1592,7 +1084,7 @@ public:
      *
      * See YImag::operator()() , GImag::operator()().
     */
-    RectCoord operator()(const SphereCoord & x) const
+    inline RectCoord operator()(const SphereCoord & x) const
     {
         return (double)n * yi(x.s) * e_r(x) + gi(x);
     }
@@ -1604,8 +1096,8 @@ public:
     {
         m = a;
         n = b;
-        yi = YImag(m, n);
-        gi = GImag(m, n);
+        yi.reset(m, n);
+        gi.reset(m, n);
     }
 
     /**
@@ -1614,7 +1106,7 @@ public:
      *
      * See: YImag::operator()().
     */
-    double eR(const SphereCoord & x) const
+    inline double eR(const SphereCoord & x) const
     {
         return n * yi(x.s);
     }
@@ -1623,7 +1115,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{I}(\boldsymbol{W}_n^m) @f$.
      * @return GImag::eTheta().
     */
-    double eTheta(const SphereCoord & x) const
+    inline double eTheta(const SphereCoord & x) const
     {
         return gi.eTheta(x.s);
     }
@@ -1632,7 +1124,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{I}(\boldsymbol{W}_n^m) @f$.
      * @return GImag::ePhi().
     */
-    double ePhi(const SphereCoord & x) const
+    inline double ePhi(const SphereCoord & x) const
     {
         return gi.ePhi(x);
     }
@@ -1641,7 +1133,7 @@ public:
     * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{I}(\boldsymbol{W}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
     * @return GImag::eTheta_dTheta().
     */
-    double eTheta_dTheta(const SphereCoord & x) const
+    inline double eTheta_dTheta(const SphereCoord & x) const
     {
         return gi.eTheta_dTheta(x);
     }
@@ -1650,7 +1142,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{I}(\boldsymbol{W}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return GImag::eTheta_dPhi().
     */
-    double eTheta_dPhi(const SphereCoord & x) const
+    inline double eTheta_dPhi(const SphereCoord & x) const
     {
         return gi.eTheta_dPhi(x);
     }
@@ -1659,7 +1151,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{I}(\boldsymbol{W}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return GImag::ePhi_dPhi().
     */
-    double ePhi_dPhi(const SphereCoord & x) const
+    inline double ePhi_dPhi(const SphereCoord & x) const
     {
         return gi.ePhi_dPhi(x);
     }
@@ -1668,7 +1160,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{I}(\boldsymbol{W}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
      * @return GImag::ePhi_dTheta().
     */
-    double ePhi_dTheta(const SphereCoord& x) const
+    inline double ePhi_dTheta(const SphereCoord& x) const
     {
         return gi.ePhi_dTheta(x);
     }
@@ -1679,7 +1171,7 @@ public:
      *
      * See: YImag::dTheta()
     */
-    double eR_dTheta(const SphereCoord& x) const
+    inline double eR_dTheta(const SphereCoord& x) const
     {
         return (double)n * yi.dTheta(x.s);
     }
@@ -1691,100 +1183,12 @@ public:
      *
      * See: YImag::dPhi()
     */
-    double eR_dPhi(const SphereCoord& x) const
+    inline double eR_dPhi(const SphereCoord& x) const
     {
         return (double)n * yi.dPhi(x.s);
     }
 
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper()
-    {
-        dot_ePhi dep(this);
-        dot_eTheta det(this);
-        dot_eR der(this);
-
-        NdPhi epdp(&dep);
-        NdPhi etdp(&det);
-        NdPhi erdp(&der);
-
-        NdTheta epdt(&dep);
-        NdTheta etdt(&det);
-        NdTheta erdt(&der);
-
-
-
-        double ephierr = 0.0;
-        double ethetaerr = 0.0;
-        double ererr = 0.0;
-        double ephidPhierr = 0.0;
-        double ephidThetaerr = 0.0;
-        double erdPhierr = 0.0;
-        double ethetadThetaerr = 0.0;
-        double ethetadPhierr = 0.0;
-        double erdThetaerr = 0.0;
-
-
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMTRAPNODES; i++)
-            {
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                SphereCoord x(1, s);
-
-                double diff = ePhi(x) - dep(x);
-                ephierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta(x) - det(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR(x) - der(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dPhi(x) - epdp(x);
-                ephidPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dTheta(x) - epdt(x);
-                ephidThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-
-
-                diff = eTheta_dTheta(x) - etdt(x);
-                ethetadThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dPhi(x) - etdp(x.s);
-                ethetadPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dTheta(x) - erdt(x);
-                erdThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dPhi(x) - erdp(x);
-                erdPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                /*if (dot(diff, diff) > 1e-12)
-                {
-                    std::cout << " error of " << dot(diff, diff) << " at " << x << std::endl;
-                    std::cout << "value of f: " << (*f1)(x) << std::endl;
-                    std::cout << "value of g: " << (*f2)(x) << std::endl;
-
-                }
-                */
-            }
-
-        std::cout << "Error in computing ephi: " << ephierr << "\n";
-        std::cout << "Error in computing etheta: " << ethetaerr << "\n";
-        std::cout << "Error in computing er: " << ererr << "\n";
-
-        std::cout << "Error in computing ephidPhi: " << ephidPhierr << "\n";
-        std::cout << "Error in computing ephidTheta: " << ephidThetaerr << "\n";
-
-        std::cout << "Error in computing ethetadTheta: " << ethetadThetaerr << "\n";
-        std::cout << "Error in computing ethetadPhi: " << ethetadPhierr << "\n";
-
-        std::cout << "Error in computing erdTheta: " << erdThetaerr << "\n";
-        std::cout << "Error in computing erdPhi: " << erdPhierr << "\n";
-
-    }
+    
 };
 
 
@@ -1804,13 +1208,10 @@ public:
     /**
      * @brief Initializes the order and degree.
     */
-    XReal(int a = 0, int b = 1)
+    XReal( int a = 0, int b = 0) : yr( a, b), gr( a, b)
     {
         m = a;
         n = b;
-
-        yr = YReal(m, n);
-        gr = GReal(m, n);
     }
 
     /**
@@ -1819,7 +1220,7 @@ public:
      *
      * See GReal::operator()().
     */
-    RectCoord operator()(const SphereCoord & x) const
+    inline RectCoord operator()(const SphereCoord & x) const
     {
         return cross(e_r(x), gr(x));
     }
@@ -1831,14 +1232,14 @@ public:
     {
         m = a;
         n = b;
-        gr = GReal(m, n);
+        gr.reset(m, n);
     }
 
     /**
      * @brief Extracts the @f$ \boldsymbol{e}_r @f$ component of @f$ \mathfrak{R}(\boldsymbol{X}_n^m) @f$.
      * @return 0.
     */
-    double eR(const SphereCoord & x) const
+    inline double eR(const SphereCoord & x) const
     {
         return 0;
     }
@@ -1847,7 +1248,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{R}(\boldsymbol{X}_n^m) @f$.
      * @return the negative of GReal::ePhi().
     */
-    double eTheta(const SphereCoord & x) const
+    inline double eTheta(const SphereCoord & x) const
     {
         return -gr.ePhi(x);
     }
@@ -1856,7 +1257,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{R}(\boldsymbol{X}_n^m) @f$.
      * @return GReal::eTheta().
     */
-    double ePhi(const SphereCoord & x) const
+    inline double ePhi(const SphereCoord & x) const
     {
         return gr.eTheta(x);
     }
@@ -1865,7 +1266,7 @@ public:
     * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{R}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
     * @return The negative of GReal::ePhi_dTheta().
     */
-    double eTheta_dTheta(const SphereCoord & x) const
+    inline double eTheta_dTheta(const SphereCoord & x) const
     {
         return -gr.ePhi_dTheta(x);
     }
@@ -1874,7 +1275,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{R}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return The negative of GReal::ePhi_dPhi().
     */
-    double eTheta_dPhi(const SphereCoord & x) const
+    inline double eTheta_dPhi(const SphereCoord & x) const
     {
         return -gr.ePhi_dPhi(x);
     }
@@ -1883,7 +1284,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{R}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return GReal::eTheta_dPhi().
     */
-    double ePhi_dPhi(const SphereCoord & x) const
+    inline double ePhi_dPhi(const SphereCoord & x) const
     {
         return gr.eTheta_dPhi(x);
     }
@@ -1892,7 +1293,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{R}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
      * @return GReal::eTheta_dTheta().
     */
-    double ePhi_dTheta(const SphereCoord& x) const
+    inline double ePhi_dTheta(const SphereCoord& x) const
     {
         return gr.eTheta_dTheta(x);
     }
@@ -1901,7 +1302,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_r @f$ component of @f$ \mathfrak{R}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
      * @return 0.
     */
-    double eR_dTheta(const SphereCoord& x) const
+    inline double eR_dTheta(const SphereCoord& x) const
     {
         return 0;
     }
@@ -1910,100 +1311,12 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_r @f$ component of @f$ \mathfrak{R}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return 0.
     */
-    double eR_dPhi(SphereCoord x) const
+    inline double eR_dPhi(SphereCoord x) const
     {
         return 0;
     }
 
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper()
-    {
-        dot_ePhi dep(this);
-        dot_eTheta det(this);
-        dot_eR der(this);
-
-        NdPhi epdp(&dep);
-        NdPhi etdp(&det);
-        NdPhi erdp(&der);
-
-        NdTheta epdt(&dep);
-        NdTheta etdt(&det);
-        NdTheta erdt(&der);
-
-
-
-        double ephierr = 0.0;
-        double ethetaerr = 0.0;
-        double ererr = 0.0;
-        double ephidPhierr = 0.0;
-        double ephidThetaerr = 0.0;
-        double erdPhierr = 0.0;
-        double ethetadThetaerr = 0.0;
-        double ethetadPhierr = 0.0;
-        double erdThetaerr = 0.0;
-
-
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMTRAPNODES; i++)
-            {
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                SphereCoord x(1, s);
-
-                double diff = ePhi(x) - dep(x);
-                ephierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta(x) - det(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR(x) - der(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dPhi(x) - epdp(x);
-                ephidPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dTheta(x) - epdt(x);
-                ephidThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-
-
-                diff = eTheta_dTheta(x) - etdt(x);
-                ethetadThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dPhi(x) - etdp(x.s);
-                ethetadPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dTheta(x) - erdt(x);
-                erdThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dPhi(x) - erdp(x);
-                erdPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                /*if (dot(diff, diff) > 1e-12)
-                {
-                    std::cout << " error of " << dot(diff, diff) << " at " << x << std::endl;
-                    std::cout << "value of f: " << (*f1)(x) << std::endl;
-                    std::cout << "value of g: " << (*f2)(x) << std::endl;
-
-                }
-                */
-            }
-
-        std::cout << "Error in computing ephi: " << ephierr << "\n";
-        std::cout << "Error in computing etheta: " << ethetaerr << "\n";
-        std::cout << "Error in computing er: " << ererr << "\n";
-
-        std::cout << "Error in computing ephidPhi: " << ephidPhierr << "\n";
-        std::cout << "Error in computing ephidTheta: " << ephidThetaerr << "\n";
-
-        std::cout << "Error in computing ethetadTheta: " << ethetadThetaerr << "\n";
-        std::cout << "Error in computing ethetadPhi: " << ethetadPhierr << "\n";
-
-        std::cout << "Error in computing erdTheta: " << erdThetaerr << "\n";
-        std::cout << "Error in computing erdPhi: " << erdPhierr << "\n";
-
-    }
+    
 };
 
 /**
@@ -2021,13 +1334,10 @@ public:
     /**
      * @brief Initializes the order and degree.
     */
-    XImag(int a = 0, int b = 1)
+    XImag(int a = 0, int b = 0) : yi( a, b), gi( a, b)
     {
         m = a;
         n = b;
-
-        yi = YImag(m, n);
-        gi = GImag(m, n);
     }
 
     /**
@@ -2036,7 +1346,7 @@ public:
      *
      * See GImag::operator()().
     */
-    RectCoord operator()(const SphereCoord & x) const
+    inline RectCoord operator()(const SphereCoord & x) const
     {
         return cross(e_r(x), gi(x));
     }
@@ -2048,14 +1358,14 @@ public:
     {
         m = a;
         n = b;
-        gi = GImag(m, n);
+        gi.reset(m, n);
     }
     
     /**
      * @brief Extracts the @f$ \boldsymbol{e}_r @f$ component of @f$ \mathfrak{I}(\boldsymbol{X}_n^m) @f$.
      * @return 0.
     */
-    double eR(const SphereCoord & x) const
+    inline double eR(const SphereCoord & x) const
     {
         return 0;
     }
@@ -2064,7 +1374,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{I}(\boldsymbol{X}_n^m) @f$.
      * @return The negative GImag::ePhi().
     */
-    double eTheta(const SphereCoord & x) const
+    inline double eTheta(const SphereCoord & x) const
     {
         return -gi.ePhi(x);
     }
@@ -2073,7 +1383,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{I}(\boldsymbol{X}_n^m) @f$.
      * @return GImag::eTheta().
     */
-    double ePhi(const SphereCoord & x) const
+    inline double ePhi(const SphereCoord & x) const
     {
         return gi.eTheta(x);
     }
@@ -2082,7 +1392,7 @@ public:
     * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{I}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
     * @return The negative of GImag::ePhi_dTheta().
     */
-    double eTheta_dTheta(const SphereCoord & x) const
+    inline double eTheta_dTheta(const SphereCoord & x) const
     {
         return -gi.ePhi_dTheta(x);
     }
@@ -2091,7 +1401,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\theta @f$ component of @f$ \mathfrak{I}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return The negative of GImag::ePhi_dPhi().
     */
-    double eTheta_dPhi(const SphereCoord & x) const
+    inline double eTheta_dPhi(const SphereCoord & x) const
     {
         return -gi.ePhi_dPhi(x);
     }
@@ -2100,7 +1410,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{I}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return GImag::eTheta_dPhi().
     */
-    double ePhi_dPhi(const SphereCoord & x) const
+    inline double ePhi_dPhi(const SphereCoord & x) const
     {
         return gi.eTheta_dPhi(x);
     }
@@ -2109,7 +1419,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_\phi @f$ component of @f$ \mathfrak{I}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
      * @return GImag::eTheta_dTheta().
     */
-    double ePhi_dTheta(const SphereCoord& x) const
+    inline double ePhi_dTheta(const SphereCoord& x) const
     {
         return gi.eTheta_dTheta(x);
     }
@@ -2118,7 +1428,7 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_r @f$ component of @f$ \mathfrak{I}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\theta@f$.
      * @return 0.
     */
-    double eR_dTheta(const SphereCoord& x) const
+    inline double eR_dTheta(const SphereCoord& x) const
     {
         return 0;
     }
@@ -2127,100 +1437,12 @@ public:
      * @brief Extracts the @f$ \boldsymbol{e}_r @f$ component of @f$ \mathfrak{I}(\boldsymbol{X}_n^m) @f$,then differentiate with respect to @f$\phi@f$.
      * @return 0.
     */
-    double eR_dPhi(SphereCoord x) const
+    inline double eR_dPhi(SphereCoord x) const
     {
         return 0;
     }
 
-    /**
-     * @brief Compares the values of the derivatives given by member function to those given by generic numerical methods.
-     *The numerical methods are given by the NdPhi, NdTheta classes, possibly with repeated applications.
-    */
-    void testhelper()
-    {
-        dot_ePhi dep(this);
-        dot_eTheta det(this);
-        dot_eR der(this);
-
-        NdPhi epdp(&dep);
-        NdPhi etdp(&det);
-        NdPhi erdp(&der);
-
-        NdTheta epdt(&dep);
-        NdTheta etdt(&det);
-        NdTheta erdt(&der);
-
-
-
-        double ephierr = 0.0;
-        double ethetaerr = 0.0;
-        double ererr = 0.0;
-        double ephidPhierr = 0.0;
-        double ephidThetaerr = 0.0;
-        double erdPhierr = 0.0;
-        double ethetadThetaerr = 0.0;
-        double ethetadPhierr = 0.0;
-        double erdThetaerr = 0.0;
-
-
-        for (int p = 0; p < NUMTRAPNODES; p++)
-            for (int i = 0; i < NUMTRAPNODES; i++)
-            {
-                SurfaceCoord s(PI / 2.0 * (GLnodes[i] + 1), 2.0 * PI * (double)p / (double)NUMTRAPNODES);
-                SphereCoord x(1, s);
-
-                double diff = ePhi(x) - dep(x);
-                ephierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta(x) - det(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR(x) - der(x);
-                ethetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dPhi(x) - epdp(x);
-                ephidPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = ePhi_dTheta(x) - epdt(x);
-                ephidThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-
-
-                diff = eTheta_dTheta(x) - etdt(x);
-                ethetadThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eTheta_dPhi(x) - etdp(x.s);
-                ethetadPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dTheta(x) - erdt(x);
-                erdThetaerr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-
-                diff = eR_dPhi(x) - erdp(x);
-                erdPhierr += sin(s.theta) * GLweights[i] * diff * diff * (PI / NUMTRAPNODES) * PI;
-                /*if (dot(diff, diff) > 1e-12)
-                {
-                    std::cout << " error of " << dot(diff, diff) << " at " << x << std::endl;
-                    std::cout << "value of f: " << (*f1)(x) << std::endl;
-                    std::cout << "value of g: " << (*f2)(x) << std::endl;
-
-                }
-                */
-            }
-
-        std::cout << "Error in computing ephi: " << ephierr << "\n";
-        std::cout << "Error in computing etheta: " << ethetaerr << "\n";
-        std::cout << "Error in computing er: " << ererr << "\n";
-
-        std::cout << "Error in computing ephidPhi: " << ephidPhierr << "\n";
-        std::cout << "Error in computing ephidTheta: " << ephidThetaerr << "\n";
-
-        std::cout << "Error in computing ethetadTheta: " << ethetadThetaerr << "\n";
-        std::cout << "Error in computing ethetadPhi: " << ethetadPhierr << "\n";
-
-        std::cout << "Error in computing erdTheta: " << erdThetaerr << "\n";
-        std::cout << "Error in computing erdPhi: " << erdPhierr << "\n";
-
-    }
+    
 
 };
 
@@ -2230,7 +1452,6 @@ public:
 class VSHTerm : public SphericalVectorField
 {
 private:
-
 
     int m;
     int n;
@@ -2256,17 +1477,16 @@ public:
      * @brief Constructs a term in the series given the normalized coefficients.
      * @param rhohats in order, the VReal, VImag, WReal, WImag, XReal, XImag coefficients to be assigned.
     */
-    VSHTerm(int m0, int n0, std::array<double, 6> rhohats)
+    VSHTerm(int m0, int n0, std::array<double, 6> rhohats): 
+        vr(m0,n0), 
+        vi(m0,n0),
+        wr(m0,n0),
+        wi(m0,n0),
+        xr(m0,n0),
+        xi(m0,n0)
     {
         m = m0;
         n = n0;
-
-        vr = VReal(m, n);
-        vi = VImag(m, n);
-        wr = WReal(m, n);
-        wi = WImag(m, n);
-        xr = XReal(m, n);
-        xi = XImag(m, n);
 
         rhohatVr = rhohats[0];
         rhohatVi = rhohats[1];
@@ -2277,17 +1497,18 @@ public:
 
     }
 
-    VSHTerm(const VSHTerm& term)
+    VSHTerm(const VSHTerm& term):
+        vr( term.m, term.n),
+        vi( term.m, term.n),
+        wr( term.m, term.n),
+        wi( term.m, term.n),
+        xr( term.m, term.n),
+        xi( term.m, term.n)
     {
         m = term.m;
         n = term.n;
 
-        vr = VReal(m, n);
-        vi = VImag(m, n);
-        wr = WReal(m, n);
-        wi = WImag(m, n);
-        xr = XReal(m, n);
-        xi = XImag(m, n);
+
 
         rhohatVr = term.rhohatVr;
         rhohatVi = term.rhohatVi;
@@ -2302,12 +1523,13 @@ public:
         m = term.m;
         n = term.n;
 
-        vr = VReal(m, n);
-        vi = VImag(m, n);
-        wr = WReal(m, n);
-        wi = WImag(m, n);
-        xr = XReal(m, n);
-        xi = XImag(m, n);
+
+        vr.reset(m, n);
+        vi.reset(m, n);
+        wr.reset(m, n);
+        wi.reset(m, n);
+        xr.reset(m, n);
+        xi.reset(m, n);
 
         rhohatVr = term.rhohatVr;
         rhohatVi = term.rhohatVi;
@@ -2390,6 +1612,7 @@ public:
         return VSHTerm(m, n, temp);
     }
 
+
     /**
      * @brief Computes the inner product between terms.
     */
@@ -2399,6 +1622,39 @@ public:
             return 0.0;
         else
             return rhohatVr * s.rhohatVr + rhohatVi * s.rhohatVi + rhohatWr * s.rhohatWr + rhohatWi * s.rhohatWi + rhohatXr * s.rhohatXr + rhohatXi * s.rhohatXi;
+    }
+
+    void axpy(const VSHTerm& term, const double& alpha)
+    {
+
+        rhohatVr +=  term.rhohatVr * alpha;
+        rhohatVi += term.rhohatVi * alpha;
+        rhohatWr += term.rhohatWr * alpha;
+        rhohatWi += term.rhohatWi * alpha;
+        rhohatXr += term.rhohatXr * alpha;
+        rhohatXi += term.rhohatXr * alpha;
+
+    }
+
+    VSHTerm& operator +=(const VSHTerm& term)
+    {
+        rhohatVr += term.rhohatVr;
+        rhohatVi += term.rhohatVi;
+        rhohatWr += term.rhohatWr;
+        rhohatWi += term.rhohatWi;
+        rhohatXr += term.rhohatXr;
+        rhohatXi += term.rhohatXr;
+    }
+
+
+    VSHTerm& operator *=(const double & a)
+    {
+        rhohatVr *= a;
+        rhohatVi *= a;
+        rhohatWr *= a;
+        rhohatWi *= a;
+        rhohatXr *= a;
+        rhohatXi *= a;
     }
 
     /**
@@ -2416,6 +1672,7 @@ public:
         return temp + (rhohatXr * xr(x) + rhohatXi * xi(x));
     }
 
+
 };
 
 /**
@@ -2429,7 +1686,7 @@ private:
 
 
     Legendre* P;
-
+    MathConstants* consts;
     
 
 public:
@@ -2443,7 +1700,7 @@ public:
      * @brief Constructs the series. n is the maximum value of the degree. there will be @f$ n(n+1)/2 @f$ terms total.
      * @param c The center of the coordinate system of the series.
     */
-    VSHSeries(int n , RectCoord c = RectCoord()): P(&legendrePoly)
+    VSHSeries(int n ,MathConstants* cts, RectCoord c = RectCoord())
     {
         N = n;
 
@@ -2453,12 +1710,15 @@ public:
             terms[i].resize(i + 1);
 
         center = c;
+        
+        consts = cts;
 
+        P = &legendrePoly;
 
 
     }
 
-    VSHSeries(const VSHSeries & vsh) : P(&legendrePoly)
+    VSHSeries(const VSHSeries & vsh) 
     {
         N = vsh.N;
 
@@ -2466,17 +1726,26 @@ public:
 
         center = vsh.center;
 
+        consts = vsh.consts; 
+
+        P = &legendrePoly;
+
     }
 
-    VSHSeries(VSHSeries&& vsh) noexcept : P(&legendrePoly)
+    VSHSeries(const VSHSeries& vsh , MathConstants * cts)
     {
         N = vsh.N;
 
-        terms = std::move(vsh.terms);
+        terms = vsh.terms;
 
         center = vsh.center;
 
+        consts = cts;
+
+        P = &legendrePoly;
+
     }
+
 
     VSHSeries & operator =(const VSHSeries& vsh)
     {
@@ -2490,21 +1759,6 @@ public:
 
     }
 
-    VSHSeries& operator =(VSHSeries&& vsh) noexcept
-    {
-        N = vsh.N;
-
-        terms = std::move(vsh.terms);
-
-        center = vsh.center;
-
-        return *this;
-
-    }
-
-    void operator ~()
-    {
-    }
 
     /**
      * @brief Approximates the passed SphericalVectorField.
@@ -2541,19 +1795,19 @@ public:
                 {
                     double n_ = double(n);
                     vr.reset(m, n);
-                    rhohats[0] =  L2InnerProduct(r, &vr, center) / (double)((2 * n_ + 1) * (n_ + 1));
+                    rhohats[0] =  L2InnerProduct(r, &vr, center , *consts) / (double)((2 * n_ + 1) * (n_ + 1));
 
                     vi.reset(m, n);
                     rhohats[1] = 0.0;
 
                     wr.reset(m, n);
-                    rhohats[2] =  L2InnerProduct(r, &wr , center) / (double)((2 * n_ + 1) * n_);
+                    rhohats[2] =  L2InnerProduct(r, &wr , center , *consts) / (double)((2 * n_ + 1) * n_);
 
                     wi.reset(m, n);
                     rhohats[3] = 0.0;
 
                     xr.reset(m, n);
-                    rhohats[4] =  L2InnerProduct(r, &xr, center) / (double)((n_ + 1) * n_);
+                    rhohats[4] =  L2InnerProduct(r, &xr, center , *consts) / (double)((n_ + 1) * n_);
 
                     xi.reset(m, n);
                     rhohats[5] = 0.0;
@@ -2564,22 +1818,22 @@ public:
                 {
                     double n_ = n;
                     vr.reset(m, n);
-                    rhohats[0] = 2.0 * L2InnerProduct(r, &vr, center) / (double)((2 * n_ + 1) * (n_ + 1));
+                    rhohats[0] = 2.0 * L2InnerProduct(r, &vr, center , *consts) / (double)((2 * n_ + 1) * (n_ + 1));
 
                     vi.reset(m, n);
-                    rhohats[1] = 2.0 * L2InnerProduct(r, &vi, center) / (double)((2 * n_ + 1) * (n_ + 1));
+                    rhohats[1] = 2.0 * L2InnerProduct(r, &vi, center , *consts) / (double)((2 * n_ + 1) * (n_ + 1));
 
                     wr.reset(m, n);
-                    rhohats[2] = 2.0 * L2InnerProduct(r, &wr, center) / (double)((2 * n_ + 1) * n_);
+                    rhohats[2] = 2.0 * L2InnerProduct(r, &wr, center , *consts) / (double)((2 * n_ + 1) * n_);
 
                     wi.reset(m, n);
-                    rhohats[3] = 2.0 * L2InnerProduct(r, &wi, center) / (double)((2 * n_ + 1) * n_);
+                    rhohats[3] = 2.0 * L2InnerProduct(r, &wi, center, *consts) / (double)((2 * n_ + 1) * n_);
 
                     xr.reset(m, n);
-                    rhohats[4] = 2.0 * L2InnerProduct(r, &xr, center) / (double)((n_ + 1) * n_);
+                    rhohats[4] = 2.0 * L2InnerProduct(r, &xr, center , *consts) / (double)((n_ + 1) * n_);
 
                     xi.reset(m, n);
-                    rhohats[5] = 2.0 * L2InnerProduct(r, &xi, center) / (double)((n_ + 1) * n_);
+                    rhohats[5] = 2.0 * L2InnerProduct(r, &xi, center , *consts) / (double)((n_ + 1) * n_);
 
                     terms[n][m] = VSHTerm(m, n, rhohats);
                 }
@@ -2598,6 +1852,7 @@ public:
 
         if (n > 0)
         {
+
             terms.resize(n + 1);
 
             for (int i = 0; i <= n; i++)
@@ -2623,22 +1878,22 @@ public:
                 {
                     double n_ = double(n);
                     vr.reset(m, n);
-                    rhohats[0] = L2InnerProductDiscrete(data, &vr,center) / ((2 * n_ + 1) * (n_ + 1));
+                    rhohats[0] = L2InnerProductDiscrete(data, &vr,center,*consts) / ((2 * n_ + 1) * (n_ + 1));
 
                     vi.reset(m, n);
-                    rhohats[1] = L2InnerProductDiscrete(data, &vi,  center) / ((2 * n_ + 1) * (n_ + 1));
+                    rhohats[1] = L2InnerProductDiscrete(data, &vi,  center , *consts) / ((2 * n_ + 1) * (n_ + 1));
 
                     wr.reset(m, n);
-                    rhohats[2] = L2InnerProductDiscrete(data, &wr, center) / ((2 * n_ + 1) * n_);
+                    rhohats[2] = L2InnerProductDiscrete(data, &wr, center , *consts) / ((2 * n_ + 1) * n_);
 
                     wi.reset(m, n);
-                    rhohats[3] = L2InnerProductDiscrete(data, &wi, center) / (double)((2 * n_ + 1) * n_);
+                    rhohats[3] = L2InnerProductDiscrete(data, &wi, center , *consts) / (double)((2 * n_ + 1) * n_);
 
                     xr.reset(m, n);
-                    rhohats[4] = L2InnerProductDiscrete(data, &xr, center) / (double)((n_ + 1) * n_);
+                    rhohats[4] = L2InnerProductDiscrete(data, &xr, center , *consts) / (double)((n_ + 1) * n_);
 
                     xi.reset(m, n);
-                    rhohats[5] = L2InnerProductDiscrete(data, &xi, center) / (double)((n_ + 1) * n_);
+                    rhohats[5] = L2InnerProductDiscrete(data, &xi, center , *consts) / (double)((n_ + 1) * n_);
 
                     terms[n][m] = VSHTerm(m, n, rhohats);
                 }
@@ -2646,23 +1901,25 @@ public:
                 {
                     double n_ = double(n);
                     vr.reset(m, n);
-                    rhohats[0] = 2.0 * L2InnerProductDiscrete(data, &vr, center) / (double)((2 * n_ + 1) * (n_ + 1));
+                    rhohats[0] = 2.0 * L2InnerProductDiscrete(data, &vr, center , *consts) / (double)((2 * n_ + 1) * (n_ + 1));
                     vi.reset(m, n);
-                    rhohats[1] = 2.0 * L2InnerProductDiscrete(data, &vi, center) / (double)((2 * n_ + 1) * (n_ + 1));
+                    rhohats[1] = 2.0 * L2InnerProductDiscrete(data, &vi, center , *consts) / (double)((2 * n_ + 1) * (n_ + 1));
 
                     wr.reset(m, n);
-                    rhohats[2] = 2.0 * L2InnerProductDiscrete(data, &wr, center) / (double)((2 * n_ + 1) * n_);
+                    rhohats[2] = 2.0 * L2InnerProductDiscrete(data, &wr, center , *consts) / (double)((2 * n_ + 1) * n_);
 
                     wi.reset(m, n);
-                    rhohats[3] = 2.0 * L2InnerProductDiscrete(data, &wi, center) / (double)((2 * n_ + 1) * n_);
+                    rhohats[3] = 2.0 * L2InnerProductDiscrete(data, &wi, center , *consts) / (double)((2 * n_ + 1) * n_);
                     xr.reset(m, n);
-                    rhohats[4] = 2.0 * L2InnerProductDiscrete(data, &xr, center) / (double)((n_ + 1) * n_);
+                    rhohats[4] = 2.0 * L2InnerProductDiscrete(data, &xr, center, *consts) / (double)((n_ + 1) * n_);
 
                     xi.reset(m, n);
-                    rhohats[5] = 2.0 * L2InnerProductDiscrete(data, &xi, center) / (double)((n_ + 1) * n_);
+                    rhohats[5] = 2.0 * L2InnerProductDiscrete(data, &xi, center , *consts) / (double)((n_ + 1) * n_);
 
                     terms[n][m] = VSHTerm(m, n, rhohats);
                 }
+                if (m < 0)
+                    std::cout << "Error, m < 0 in VSH approximation function!\n";
                 append(&terms[n][m]);
             }
     }
@@ -2673,7 +1930,7 @@ public:
     */
     VSHSeries operator +(const VSHSeries & s) const
     {
-        VSHSeries temp(N, center);
+        VSHSeries temp(N, consts, center);
 
         temp.terms.resize(N + 1);
 
@@ -2684,8 +1941,9 @@ public:
 
         for(int n = 0; n <= N; n++)
             for (int m = 0; m <= n; m++)
+            {
                 temp.terms[n][m] = terms[n][m] + s.terms[n][m];
-
+            }
         return temp;
             
     }
@@ -2694,9 +1952,9 @@ public:
      * @brief subtracts two VSHSeries.
      * @param s the second series to add.
     */
-    VSHSeries operator -(const VSHSeries & s) const
+    VSHSeries operator -(const VSHSeries& s) const
     {
-        VSHSeries temp(N,  center);
+        VSHSeries temp(N, consts, center);
 
         temp.terms.resize(N + 1);
 
@@ -2707,15 +1965,28 @@ public:
 
         for (int n = 0; n <= N; n++)
             for (int m = 0; m <= n; m++)
+            {
                 temp.terms[n][m] = terms[n][m] - s.terms[n][m];
-
+            }
         return temp;
+
+    }
+
+    void axpy(const VSHSeries& s , const double & alpha)
+    {
+
+
+
+        for (int n = 0; n <= N; n++)
+            for (int m = 0; m <= n; m++)
+                terms[n][m].axpy(s.terms[n][m] , alpha);
+            
 
     }
 
     VSHSeries operator -() const
     {
-        VSHSeries temp(N, center);
+        VSHSeries temp(N, consts, center);
 
         temp.terms.resize(N + 1);
 
@@ -2726,14 +1997,16 @@ public:
 
         for (int n = 0; n <= N; n++)
             for (int m = 0; m <= n; m++)
+            {
                 temp.terms[n][m] = -terms[n][m];
-
+            }
         return temp;
+
     }
 
-    VSHSeries operator *(const double& a) const
+    VSHSeries operator *(const double & a) const
     {
-        VSHSeries temp(N, center);
+        VSHSeries temp(N, consts, center);
 
         temp.terms.resize(N + 1);
 
@@ -2744,9 +2017,25 @@ public:
 
         for (int n = 0; n <= N; n++)
             for (int m = 0; m <= n; m++)
+            {
                 temp.terms[n][m] = terms[n][m] * a;
-
+            }
         return temp;
+
+    }
+
+    VSHSeries& operator +=(const VSHSeries& s)
+    {
+        for (int n = 0; n <= N; n++)
+            for (int m = 0; m <= n; m++)
+                terms[n][m] += s.terms[n][m];
+    }
+
+    VSHSeries& operator *=(const double & a)
+    {
+        for (int n = 0; n <= N; n++)
+            for (int m = 0; m <= n; m++)
+                terms[n][m] *= a;
     }
 
     /**
@@ -2777,4 +2066,6 @@ public:
 
         return VectorFieldSum::operator()(temp);
     }
+
+
 };

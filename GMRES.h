@@ -146,12 +146,12 @@ int GMRES
 
 	// Determine the residual and allocate the space for the Krylov
 	// subspace.
-	Approximation* firstArg = new Approximation(solution->getN());
-	std::vector<Approximation> V(krylovDimension + 1, *firstArg);
+	Approximation firstArg(solution->getN());
+	std::vector<Approximation> V(krylovDimension + 1, firstArg);
 	
-	Approximation* residual = new Approximation();
-	*residual = precond->solve((*rhs) - (*linearization) * (*solution));
-	Double rho = residual->norm();
+	Approximation residual;
+	residual = precond->solve((*rhs) - (*linearization) * (*solution));
+	Double rho = residual.norm();
 	Double normRHS = rhs->norm();
 
 	// variable for keeping track of how many restarts had to be used.
@@ -167,7 +167,7 @@ int GMRES
 
 		// The first vector in the Krylov subspace is the normalized
 		// residual.
-		V[0] = (*residual) * (1.0 / rho);
+		V[0] = residual * (1.0 / rho);
 
 		// Need to zero out the s vector in case of restarts
 		// initialize the s vector used to estimate the residual.
@@ -272,8 +272,8 @@ int GMRES
 	// approximation and start over.
 		totalRestarts += 1;
 		Update(H, solution, s, &V, iteration - 1);
-		*residual = precond->solve((*linearization) * (*solution) - (*rhs));
-		rho = residual->norm();
+		residual = precond->solve((*linearization) * (*solution) - (*rhs));
+		rho = residual.norm();
 		std::cout << "GMRES restart.\n";
 	} // while(numberRestarts,rho)
 
@@ -281,7 +281,6 @@ int GMRES
 	ArrayUtils<double>::deltwotensor(givens);
 	ArrayUtils<double>::deltwotensor(H);
 	ArrayUtils<double>::delonetensor(s);
-	delete residual;
 	//delete [] V;
 	//tolerance = rho/normRHS;
 
